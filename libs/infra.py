@@ -49,8 +49,8 @@ class Provisioning(object):
         self.connect_to_test_server()
         self.change_os_and_medium(hosts_list)
         self.set_build_in_foreman(hosts_list)
-        # self.reboot_hosts(hosts_list)
-        # self.wait_for_reprovision_to_finish(hosts_list)
+        self.reboot_hosts(hosts_list)
+        self.wait_for_reprovision_to_finish(hosts_list)
         self.disconnect_from_test_server()
 
     def set_build_in_foreman(self, hosts_list):
@@ -102,7 +102,7 @@ class Provisioning(object):
                         ptables_id=ptables_id)
             self.ssh.exec_command(bash_cmd)
             LOG.info('Foreman: Changed host {host} OS to {os}'
-                     .format(os=self.operating_system, host=host))
+                     .format(os=self.operating_system, host=host.fqdn))
 
     def reboot_hosts(self, hosts_list):
         for host in hosts_list:

@@ -83,7 +83,7 @@ class Host(object):
             tenant_nic_speed = \
                 job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['tenant_nic_speed']
             for nic in nics_list:
-                cmd = "ethtool {nic}".format(nic=nic) + \
+                cmd = "ethtool {nic} ".format(nic=nic) + \
                       "| awk '/Speed/ {print $2}'"
                 nic_speed, stderr = self.run_bash_command(cmd)
 
@@ -131,7 +131,7 @@ class Host(object):
     def reboot(self):
         self.open_connection()
         self.run_bash_command('reboot')
-        LOG.info('Rebooting {fqdn}'.format(fqdn=host.fqdn))
+        LOG.info('Rebooting {fqdn}'.format(fqdn=self.fqdn))
         self.close_connection()
 
     def print_host(self):

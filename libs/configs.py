@@ -94,6 +94,10 @@ class Configs(object):
         cmd = 'yum-config-manager --disable {repo}'.format(repo=repo_name)
         host.run_bash_command(cmd)
 
+    def disable_epel(self, host):
+        self.yum_disable_repo(host, 'epel')
+
+
     def disable_and_persist_selinux(self, host):
         LOG.info('{time} {fqdn}: disabling SELinux on host {host}'
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
