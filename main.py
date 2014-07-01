@@ -2,7 +2,6 @@ import os
 import logging
 import paramiko
 from ConfigParser import ConfigParser
-from time import sleep
 from libs.host import Host
 from libs.infra import Provisioning
 from libs.configs import Configs
@@ -195,28 +194,17 @@ def hurricane():
         LOG.info('Post installation configurations list is empty, Skipping...')
 
 
-def ff():
-        """Wait for condition to be true until timeout.
-
-    :param label: used for logging
-    :param condition: function that takes the object from obj_getter and
-        returns True or False
-    :param obj_getter: function that returns the object on which the condition
-        is tested
-    :param timeout_sec: how many seconds to wait until a TimeoutError
-    :param wait_sec: how many seconds to wait between testing the condition
-    :raises: TimeoutError when timeout_sec is exceeded
-             and condition isn't true
-    """
-        pass
-
-
 if __name__ == '__main__':
     hurricane()
 
 # TODO:
-# 1. finish function: wait_for_reprovision_to_finish - Done
-# 2. add configurations (create tun interface, add br-ex ext port)
-# 3. Proper logging (instead of prints) - Done
-# 4. exceptions handling - Started
-# 5. prep for tempest (later phase)
+# 1. add configurations (create tun interface, add br-ex ext port)
+# 2. exceptions handling - Started
+# 3. prep for tempest (later phase)
+# 4. docstring:
+
+#def ff():
+    """
+    Wait for condition to be true until timeout.
+    :param param_name: desc
+    """

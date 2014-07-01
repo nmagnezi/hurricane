@@ -6,14 +6,15 @@ LOG.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 LOG.addHandler(console)
 
-
 JOB_CONFIG_FILE_SECTION = 'job_params'
 REPO_CONFIG_FILE_SECTION = 'repositories'
-
-# Pre and Post installation configurations
+CI_CONFIG_FILE_SECTION = 'ci'
+CREDENTIALS_CONFIG_FILE_SECTION = 'credentials'
+ENVIRONMENT_CONFIG_FILE_SECTION = 'environment'
 
 
 class Configs(object):
+# Pre and Post installation configurations
 
     def __init__(self, job_dict):
         self.job_dict = job_dict
@@ -108,28 +109,94 @@ class Configs(object):
         host.run_bash_command(cmd2)
         host.run_bash_command(cmd3)
 
+    def rhos_release(self, host):
+        rpm_url = self.job_dict[CI_CONFIG_FILE_SECTION]['rhos-release']
+        self.install_rpm(host, rpm_url)
+
+    def rhos_release_havana(self, host):
+        self.rhos_release(host)
+        cmd = 'rhos-release 4'
+        host.run_bash_command(cmd)
+
+    def rhos_release_icehouse(self, host):
+        self.rhos_release(host)
+        cmd = 'rhos-release 5'
+        host.run_bash_command(cmd)
+
     def restart_linux_service(self, host, service_name):
-        """work in progress"""
-        pass
+        LOG.info('{time} {fqdn}: restarting {service_name}'
+                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
+                                                               '%H:%M:%S'),
+                         fqdn=host.fqdn, service_name=service_name))
+        if 'rhel6' in host.os_name:
+            cmd = 'service {service} restart'\
+                .format(service_name=service_name)
+
+        else:  # rhel7 or fedora
+            cmd = 'systemctl restart {service}.service'\
+                .format(service_name=service_name)
+
+        host.run_bash_command(cmd)
+
+    def ovs_add_port_to_br(self, host, br_name, port_name):
+        LOG.info('{time} {fqdn}: adding {port_name} to {br_name}'
+                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
+                                                               '%H:%M:%S'),
+                         fqdn=host.fqdn, port_name=port_name,
+                         br_name=br_name))
+        cmd = 'ovs-vsctl add-port {br_name} {port_name}'\
+              .format(br_name=br_name, port_name=port_name)
+
+        host.run_bash_command(cmd)
+
+    def add_ext_net_port_to_ovs_br(self, host):
+        self.ovs_add_port_to_br(host, 'br-ex', host.tenant_interface)
+
+    def create_sub_interface(self, host, vlan):
+        # TODO: internally read vlan id instead of retrieving it from the user.
+        interface = host.tenant_interface
+        LOG.info('{time} {fqdn}: Creating sub interface: {interface}.{vlan}'
+                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
+                                                               '%H:%M:%S'),
+                         fqdn=host.fqdn, interface=interface, vlan=vlan))
+
+        file_path = '/etc/sysconfig/network-scripts/ifcfg-{interface}.{vlan}'\
+                    .format(interface=interface, vlan=vlan)
+
+        cmd1 = 'echo > DEVICE={interface}.{vlan} {file_path}'\
+               .format(vlan=vlan, file_path=file_path)
+        cmd2 = 'echo > BOOTPROTO=static {file_path}'\
+               .format(file_path=file_path)
+        cmd3 = 'echo > ONBOOT=yes {file_path}'\
+               .format(file_path=file_path)
+        cmd4 = 'echo > USERCTL=no {file_path}'\
+               .format(file_path=file_path)
+        cmd5 = 'echo > VLAN=yes {file_path}'\
+               .format(file_path=file_path)
+        cmd6 = 'ifup {interface}.{vlan}'.format(interface=interface, vlan=vlan)
+
+        host.run_bash_command(cmd1)
+        host.run_bash_command(cmd2)
+        host.run_bash_command(cmd3)
+        host.run_bash_command(cmd4)
+        host.run_bash_command(cmd5)
+        host.run_bash_command(cmd6)
 
     def register_to_rhn(self, host):
-        """work in progress"""
-        pass
-
-    def register_to_sm(self, host):
-        """work in progress"""
-        pass
-
-    def create_ext_net_interface(self, host):
-        """work in progress"""
-        pass
-
+        LOG.info('{time} {fqdn}: registering to rhn'
+                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
+                                                               '%H:%M:%S'),
+                         fqdn=host.fqdn))
+        rhn_user = self.job_dict[CREDENTIALS_CONFIG_FILE_SECTION]['rhn_user']
+        rhn_pass = self.job_dict[CREDENTIALS_CONFIG_FILE_SECTION]['rhn_pass']
+        cmd = 'rhnreg_ks --serverUrl=https://xmlrpc.rhn.redhat.com/XMLRPC ' \
+              '--username={rhn_user} --password={rhn_pass} ' \
+              '--profilename={fqdn} --nohardware --novirtinfo' \
+              ' --nopackages --use-eus-channel --force'\
+              .format(fqdn=host.fqdn, rhn_user=rhn_user, rhn_pass=rhn_pass)
+        host.run_bash_command(cmd)
 
     def create_tunnel_interface(self, host):
-        """work in progress"""
-        pass
-
-    def add_ext_net_interface_to_ovs_bridge(self, host):
-        """work in progress"""
-        pass
-
+        """WIP"""
+        subnet = \
+            self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['tunneling_subnet']
