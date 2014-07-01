@@ -1,7 +1,7 @@
 import paramiko
 import logging
 import datetime
-from socket import timeout
+from time import sleep
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)

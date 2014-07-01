@@ -50,6 +50,7 @@ class Provisioning(object):
         self.change_os_and_medium(hosts_list)
         self.set_build_in_foreman(hosts_list)
         self.reboot_hosts(hosts_list)
+        sleep(10)  # allows host to gracefully reboot
         self.wait_for_reprovision_to_finish(hosts_list)
         self.disconnect_from_test_server()
 
