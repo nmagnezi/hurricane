@@ -1,8 +1,5 @@
 import paramiko
-from socket import timeout
-from paramiko.ssh_exception import SSHException
 from time import sleep
-from socket import timeout
 import json
 import logging
 
