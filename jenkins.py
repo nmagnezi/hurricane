@@ -13,7 +13,7 @@ console = logging.StreamHandler()
 LOG.addHandler(console)
 
 ENV_VARIABLE_PREFIX = 'DEPLOYER_'
-CONFIG_FILE_DIRCTORY = 'storm/hurricane/config'
+CONFIG_FILE_DIRCTORY = 'config'
 CONFIG_FILE_SECTION = 'job_params'
 CONFIG_FILE_NAME = os.environ.get(ENV_VARIABLE_PREFIX + 'JOB_CONF_FILE'
                                   , 'config.ini')

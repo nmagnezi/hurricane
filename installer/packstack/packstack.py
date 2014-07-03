@@ -7,6 +7,7 @@ LOG.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 LOG.addHandler(console)
 
+INSTALLER_CONFIG_FILE_DEFAULT_PATH = '/root'
 INSTALLER_CONFIG_FILE_DIRCTORY = 'installer/packstack'
 INSTALLER_CONFIG_FILE_SECTION = 'general'
 JOB_CONFIG_FILE_SECTION = 'job_params'
@@ -54,8 +55,10 @@ class Packstack(object):
                          host=host.fqdn))
 
     def get_tagged_value(self, attribute):
+        LOG.info(self.answer_file_dict)
         tagged_value = \
-            self.answer_file_dict[INSTALLER_CONFIG_FILE_SECTION][attribute]
+            self.answer_file_dict[INSTALLER_CONFIG_FILE_SECTION][
+                attribute.lower()]
         return tagged_value[1:-1]
 
     def set_tagged_value(self, host, tag_name, tag_value):
@@ -66,8 +69,6 @@ class Packstack(object):
                     answer_file_name=self.packstack_answer_file_name)
 
         host.run_bash_command(cmd)
-
-        LOG.info('{fqdn}: {cmd}'.format(fqdn=host.fqdn, bash_command=cmd))
 
     def configure_answer_file(self, controller, openstack_hosts):
         LOG.info('configuring packstack answer file {answer_file_name} '
@@ -82,11 +83,12 @@ class Packstack(object):
 
             cmd = 'sed -i s/^{option}=.*/{option}="{value}"/g ' \
                   '{packstack_answer_file_name}'\
-                  .format(attribute=option.upper(),
+                  .format(option=option.upper(),
                           value=self.answer_file_dict
-                          [INSTALLER_CONFIG_FILE_SECTION][option.upper()],
+                          [INSTALLER_CONFIG_FILE_SECTION][option],
                           packstack_answer_file_name=
-                          '/root/' + self.packstack_answer_file_name)
+                          os.path.join(INSTALLER_CONFIG_FILE_DEFAULT_PATH,
+                                       self.packstack_answer_file_name))
 
             controller.run_bash_command(cmd)
 
@@ -114,8 +116,8 @@ class Packstack(object):
 
     def install_openstack(self, host):
         LOG.info('running packstack on {host}. '
-                 'grab yourself a cup of coffee it will take ~20 minutes'
-                 .format(host=host))
+                 'Grab yourself a cup of coffee it will take ~20 minutes'
+                 .format(host=host.fqdn))
 
         cmd = 'packstack --answer-file=/root/{packstack_answer_file_name}'\
               .format(packstack_answer_file_name=

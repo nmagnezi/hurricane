@@ -41,7 +41,6 @@ class Provisioning(object):
         LOG.info('Connected to {test_server}'
                  .format(test_server=self.test_server))
 
-
     def disconnect_from_test_server(self):
         self.ssh.close()
 

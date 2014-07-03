@@ -118,10 +118,11 @@ class Deployer(object):
     def determine_controller_host(self):
         installer_name = \
             self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_installer']
-        option = installer_name + '_controller'
-        controller_option = self.job_dict[CONSTANTS_CONFIG_FILE_SECTION][option]
+        controller_option = installer_name + '_controller'
+        controller_option_name = \
+            self.job_dict[CONSTANTS_CONFIG_FILE_SECTION][controller_option]
         controller_role_name = \
-            self.installer.get_tagged_value(controller_option)
+            self.installer.get_tagged_value(controller_option_name)
         for tmp_host in self.openstack_hosts:
             if tmp_host.role == controller_role_name:
                 return tmp_host

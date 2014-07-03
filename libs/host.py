@@ -1,7 +1,6 @@
 import paramiko
 import logging
 import datetime
-from time import sleep
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -95,7 +94,7 @@ class Host(object):
                     return nic
 
     def open_connection(self):
-        self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.ssh.set_missing_host_key_policy(paramiko.WarningPolicy())
         self.ssh.connect(hostname=self.fqdn,
                          username=self.username,
                          password=self.password,
