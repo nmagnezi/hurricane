@@ -16,6 +16,9 @@ ENVIRONMENT_SECTION = 'environment'
 JOB_CONFIG_FILE_SECTION = 'job_params'
 FOREMAN_PARAMS_SECTION = 'foreman_params'
 
+RECONNECTION_RETRIES = 1200
+RECONNECTION_INTERVAL = 10
+
 class Provisioning(object):
 
     def __init__(self, job_dict):
@@ -140,26 +143,25 @@ class Provisioning(object):
 
     def wait_for_reprovision_to_finish(self, hosts_list):
         # TODO: a thread to monitor each host provisioning till timeout/success.
-        num_of_retries = 1200
-        interval = 2
         for host in hosts_list:
             LOG.info('Waiting for reprovision of: {fqdn}'
                      .format(fqdn=host.fqdn))
-            for i in xrange(num_of_retries):
+            for i in xrange(RECONNECTION_RETRIES):
 
                 LOG.info('Attempting to open SSH connection to {fqdn}, '
                          'Attempt {i} out of {num_of_retries}'
                          .format(fqdn=host.fqdn, i=i,
-                                 num_of_retries=num_of_retries))
+                                 num_of_retries=RECONNECTION_RETRIES))
                 try:
                     host.open_connection()
 
                 except Exception as e:
-                    LOG.info('Failed to connect to {fqdn} with exeption: '
+                    LOG.info('Failed to connect to {fqdn} with exception: '
                              '{exception}'.format(fqdn=host.fqdn, exception=e))
                     LOG.info('')
-                    LOG.info('Sleeping for {x} Seconds'.format(x=interval))
-                    sleep(interval)
+                    LOG.info('Sleeping for {x} Seconds'
+                             .format(x=RECONNECTION_INTERVAL))
+                    sleep(RECONNECTION_INTERVAL)
 
                 else:
                     LOG.info('Restored connection to {fqdn}'
