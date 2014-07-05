@@ -58,22 +58,15 @@ class Packstack(object):
         LOG.info('debugging attribute: {c}'
                  .format(c=attribute))
         a = attribute.lower()
-        LOG.info('debugging INSTALLER_CONFIG_FILE_SECTION: {c}'
-                 .format(c=INSTALLER_CONFIG_FILE_SECTION))
-        LOG.info('debugging a: {c}'
-                 .format(c=a))
-        LOG.info('debugging answer_file_dict: {c}'
-                 .format(c=self.answer_file_dict))
         tagged_value = self.answer_file_dict[INSTALLER_CONFIG_FILE_SECTION][a]
         return tagged_value[1:-1]
 
     def set_tagged_value(self, host, tag_name, tag_value):
-        cmd = 'sed -i s/"<{tagjob_dict_name}>"/"{tag_value}"/g ' \
+        cmd = 'sed -i s/"<{tag_name}>"/"{tag_value}"/g ' \
                        '/root/{answer_file_name}'\
             .format(tag_name=tag_name,
                     tag_value=tag_value,
                     answer_file_name=self.packstack_answer_file_name)
-
         host.run_bash_command(cmd)
 
     def configure_answer_file(self, controller, openstack_hosts):
