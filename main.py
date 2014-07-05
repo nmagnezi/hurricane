@@ -13,7 +13,7 @@ LOG.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 LOG.addHandler(console)
 
-# JOB_CONFIG_FILE_DIRECTORY = 'config'
+#JOB_CONFIG_FILE_DIRECTORY = 'config'
 JOB_CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
 JOB_CONFIG_FILE_SECTION = 'job_params'
 JOB_CONFIG_FILE_NAME = 'config.ini'
@@ -119,9 +119,15 @@ class Deployer(object):
     def determine_controller_host(self):
         installer_name = \
             self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_installer']
+        LOG.info('debugging installer_name: {c}'
+                 .format(c=installer_name))
         controller_option = installer_name + '_controller'
+        LOG.info('debugging controller_option: {c}'
+                 .format(c=controller_option))
         controller_option_name = \
             self.job_dict[CONSTANTS_CONFIG_FILE_SECTION][controller_option]
+        LOG.info('debugging controller_option_name: {c}'
+                 .format(c=controller_option_name))
         controller_role_name = \
             self.installer.get_tagged_value(controller_option_name)
         for tmp_host in self.openstack_hosts:
