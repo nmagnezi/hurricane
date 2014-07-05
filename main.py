@@ -13,7 +13,8 @@ LOG.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 LOG.addHandler(console)
 
-JOB_CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
+JOB_CONFIG_FILE_DIRECTORY = 'config'
+# JOB_CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
 JOB_CONFIG_FILE_SECTION = 'job_params'
 JOB_CONFIG_FILE_NAME = 'config.ini'
 JOB_CONFIG_FILE_PATH = os.path.join(JOB_CONFIG_FILE_DIRECTORY,
@@ -125,6 +126,8 @@ class Deployer(object):
             self.installer.get_tagged_value(controller_option_name)
         for tmp_host in self.openstack_hosts:
             if tmp_host.role == controller_role_name:
+                LOG.info('Controller host found: {fqdn}'
+                         .format(fqdn=tmp_host.fqdn))
                 return tmp_host
 
     def print_job_dict(self):
