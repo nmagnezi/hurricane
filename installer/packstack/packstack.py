@@ -62,6 +62,8 @@ class Packstack(object):
                  .format(c=INSTALLER_CONFIG_FILE_SECTION))
         LOG.info('debugging a: {c}'
                  .format(c=a))
+        LOG.info('debugging answer_file_dict: {c}'
+                 .format(c=self.answer_file_dict))
         tagged_value = self.answer_file_dict[INSTALLER_CONFIG_FILE_SECTION][a]
         return tagged_value[1:-1]
 
