@@ -55,7 +55,13 @@ class Packstack(object):
                          host=host.fqdn))
 
     def get_tagged_value(self, attribute):
+        LOG.info('debugging attribute: {c}'
+                 .format(c=attribute))
         a = attribute.lower()
+        LOG.info('debugging INSTALLER_CONFIG_FILE_SECTION: {c}'
+                 .format(c=INSTALLER_CONFIG_FILE_SECTION))
+        LOG.info('debugging a: {c}'
+                 .format(c=a))
         tagged_value = self.answer_file_dict[INSTALLER_CONFIG_FILE_SECTION][a]
         return tagged_value[1:-1]
 
