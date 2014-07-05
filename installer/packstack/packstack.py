@@ -8,7 +8,7 @@ console = logging.StreamHandler()
 LOG.addHandler(console)
 
 INSTALLER_CONFIG_FILE_DEFAULT_PATH = '/root'
-INSTALLER_CONFIG_FILE_DIRCTORY = 'installer/packstack'
+INSTALLER_CONFIG_FILE_DIRCTORY = 'hurricane/installer/packstack'
 INSTALLER_CONFIG_FILE_SECTION = 'general'
 JOB_CONFIG_FILE_SECTION = 'job_params'
 
