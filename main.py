@@ -13,8 +13,8 @@ LOG.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 LOG.addHandler(console)
 
-JOB_CONFIG_FILE_DIRECTORY = 'config'
-# JOB_CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
+# JOB_CONFIG_FILE_DIRECTORY = 'config'
+JOB_CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
 JOB_CONFIG_FILE_SECTION = 'job_params'
 JOB_CONFIG_FILE_NAME = 'config.ini'
 JOB_CONFIG_FILE_PATH = os.path.join(JOB_CONFIG_FILE_DIRECTORY,
