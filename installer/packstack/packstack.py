@@ -108,6 +108,8 @@ class Packstack(object):
                     tags_to_inject[tag_name] = []
                 tags_to_inject[tag_name].append(tag_value)
 
+        tags_to_inject['tenant_int'] = controller.tenant_interface
+
         # inject tagged values to answer file
         for tag in tags_to_inject.keys():
             self.set_tagged_value(controller, tag,
