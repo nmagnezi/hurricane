@@ -1,5 +1,6 @@
 import logging
 import datetime
+import os
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -142,6 +143,18 @@ class Configs(object):
 
         host.run_bash_command(cmd)
 
+    def tun_int_ip_addr(self, host):
+       tun_subnet = \
+           self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['tunneling_subnet']
+
+
+        LOG.info('{time} {fqdn}: configuring tunnel interface {int} ip '
+                 'address {ip}'
+                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
+                                                               '%H:%M:%S'),
+                         fqdn=host.fqdn, int=host.tenant_interface, ip=ip))
+
+
     def ovs_add_port_to_br(self, host, br_name, port_name):
         LOG.info('{time} {fqdn}: adding {port_name} to {br_name}'
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
@@ -201,6 +214,38 @@ class Configs(object):
         host.run_bash_command(cmd)
 
     def create_tunnel_interface(self, host):
-        """WIP"""
-        subnet = \
+        interface_file_location = '/etc/sysconfig/network-scripts'
+        interface_file_name = 'ifcfg-{name}'.format(name=host.tenant_interface)
+        interface_file_path = os.path.join(interface_file_location,
+                                           interface_file_name)
+        tun_subnet = \
             self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['tunneling_subnet']
+
+        cmd1 = "ifconfig {i} | grep -v inet6 | awk \'/inet/ {print $2}\' | " \
+               "cut -d\"\.\" -f 4".format(i=host.mgmt_interface)
+
+        octate, stderr = host.run_bash_command(cmd1)
+
+        cmd2 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
+               .format(option='BOOTPROTO', value='STATIC',
+                       file_path=interface_file_path)
+        cmd3 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
+               .format(option='ONBOOT', value='yes',
+                       file_path=interface_file_path)
+        cmd4 = 'echo >> IPADDR={tun_subnet}.{octate}'\
+               .format(tun_subnet=tun_subnet, octate=octate)
+        cmd5 = 'echo >> NETMASK=255.255.255.0'
+        if host.os_name == 'rhel6':
+            cmd6 = 'ifdown {i}'.format(i=host.tenant_interface)
+            cmd7 = 'ifup {i}'.format(i=host.tenant_interface)
+        else:  # rhel7 or fedora
+            cmd6 = 'nmcli connection reload'
+            cmd7 = 'nmcli connection up {i}'.format(i=host.tenant_interface)
+
+        host.run_bash_command(cmd1)
+        host.run_bash_command(cmd2)
+        host.run_bash_command(cmd3)
+        host.run_bash_command(cmd4)
+        host.run_bash_command(cmd5)
+        host.run_bash_command(cmd6)
+        host.run_bash_command(cmd7)

@@ -70,7 +70,7 @@ class Packstack(object):
         host.run_bash_command(cmd)
 
     def configure_answer_file(self, controller, openstack_hosts):
-        LOG.info('configuring packstack answer file {answer_file_name} '
+        LOG.info('Configuring packstack answer file {answer_file_name} '
                  'on host {host}'
                  .format(answer_file_name=self.packstack_answer_file_name,
                          host=controller.fqdn))
