@@ -22,6 +22,7 @@ JOB_CONFIG_FILE_PATH = os.path.join(JOB_CONFIG_FILE_DIRECTORY,
 CREDENTIALS_CONFIG_FILE_SECTION = 'credentials'
 INSTALLER_CONFIG_FILE_SECTION = 'general'
 CONSTANTS_CONFIG_FILE_SECTION = 'constants'
+ENVIRONMENT_CONFIG_FILE_SECTION = 'environment'
 
 SSH_TIMEOUT = 3
 
@@ -115,18 +116,24 @@ class Deployer(object):
             for config in configs_list.split(", "):
                 getattr(self.configurations, config)(openstack_host)
 
+    def config_networker_ext_net_interface(self):
+        installer_name = \
+            self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_installer']
+        networker_option = installer_name + '_networker'
+        networker_option_name = \
+            self.job_dict[CONSTANTS_CONFIG_FILE_SECTION][networker_option]
+        networker_role_name = \
+            self.installer.get_tagged_value(networker_option_name)
+        for tmp_host in self.openstack_hosts:
+            if tmp_host.role == networker_role_name:
+                self.configurations.create_sub_interface(tmp_host)
+
     def determine_controller_host(self):
         installer_name = \
             self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_installer']
-        LOG.info('debugging installer_name: {c}'
-                 .format(c=installer_name))
         controller_option = installer_name + '_controller'
-        LOG.info('debugging controller_option: {c}'
-                 .format(c=controller_option))
         controller_option_name = \
             self.job_dict[CONSTANTS_CONFIG_FILE_SECTION][controller_option]
-        LOG.info('debugging controller_option_name: {c}'
-                 .format(c=controller_option_name))
         controller_role_name = \
             self.installer.get_tagged_value(controller_option_name)
         for tmp_host in self.openstack_hosts:
@@ -148,7 +155,7 @@ class Deployer(object):
 
 
 def do_exec(value):
-    skip_values = ['', 'false', None]
+    skip_values = ['', 'false', 'None', None]
     if not value in skip_values:
         return True
     else:
@@ -183,6 +190,9 @@ def hurricane():
     if do_exec(main.job_dict[JOB_CONFIG_FILE_SECTION]['install_openstack']):
         if main.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_installer'] == \
                 'packstack':
+            if do_exec(
+                    main.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['ext_vlan']):
+                main.config_networker_ext_net_interface()
             controller_host = main.determine_controller_host()
             controller_host.open_connection()
             main.configurations.install_rpm(controller_host,

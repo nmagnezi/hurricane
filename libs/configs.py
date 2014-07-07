@@ -143,18 +143,6 @@ class Configs(object):
 
         host.run_bash_command(cmd)
 
-    def tun_int_ip_addr(self, host):
-       tun_subnet = \
-           self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['tunneling_subnet']
-
-
-        LOG.info('{time} {fqdn}: configuring tunnel interface {int} ip '
-                 'address {ip}'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn, int=host.tenant_interface, ip=ip))
-
-
     def ovs_add_port_to_br(self, host, br_name, port_name):
         LOG.info('{time} {fqdn}: adding {port_name} to {br_name}'
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
@@ -169,17 +157,16 @@ class Configs(object):
     def add_ext_net_port_to_ovs_br(self, host):
         self.ovs_add_port_to_br(host, 'br-ex', host.tenant_interface)
 
-    def create_sub_interface(self, host, vlan):
-        # TODO: internally read vlan id instead of retrieving it from the user.
-        interface = host.tenant_interface
+    def create_sub_interface(self, host):
+        # TODO: do that only for netwoker nodes
         LOG.info('{time} {fqdn}: Creating sub interface: {interface}.{vlan}'
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
                                                                '%H:%M:%S'),
-                         fqdn=host.fqdn, interface=interface, vlan=vlan))
-
+                         fqdn=host.fqdn, interface=interface, vlan=ext_vlan))
+        ext_vlan = self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['ext_vlan']
+        interface = host.tenant_interface
         file_path = '/etc/sysconfig/network-scripts/ifcfg-{interface}.{vlan}'\
                     .format(interface=interface, vlan=vlan)
-
         cmd1 = 'echo > DEVICE={interface}.{vlan} {file_path}'\
                .format(vlan=vlan, file_path=file_path)
         cmd2 = 'echo > BOOTPROTO=static {file_path}'\
@@ -190,8 +177,8 @@ class Configs(object):
                .format(file_path=file_path)
         cmd5 = 'echo > VLAN=yes {file_path}'\
                .format(file_path=file_path)
-        cmd6 = 'ifup {interface}.{vlan}'.format(interface=interface, vlan=vlan)
-
+        cmd6 = 'ifup {interface}.{vlan}'.format(interface=interface,
+                                                vlan=ext_vlan)
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
         host.run_bash_command(cmd3)
