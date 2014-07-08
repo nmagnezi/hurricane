@@ -159,32 +159,43 @@ class Configs(object):
 
     def create_sub_interface(self, host):
         # TODO: do that only for netwoker nodes
+        ext_vlan = self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['ext_vlan']
+        interface = host.tenant_interface
+        file_path = '/etc/sysconfig/network-scripts/ifcfg-{interface}.{vlan}'\
+                    .format(interface=interface, vlan=ext_vlan)
+
         LOG.info('{time} {fqdn}: Creating sub interface: {interface}.{vlan}'
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
                                                                '%H:%M:%S'),
                          fqdn=host.fqdn, interface=interface, vlan=ext_vlan))
-        ext_vlan = self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['ext_vlan']
-        interface = host.tenant_interface
-        file_path = '/etc/sysconfig/network-scripts/ifcfg-{interface}.{vlan}'\
-                    .format(interface=interface, vlan=vlan)
-        cmd1 = 'echo > DEVICE={interface}.{vlan} {file_path}'\
-               .format(vlan=vlan, file_path=file_path)
-        cmd2 = 'echo > BOOTPROTO=static {file_path}'\
+
+        cmd1 = 'echo DEVICE={interface}.{vlan} > {file_path}'\
+               .format(interface=interface, vlan=ext_vlan, file_path=file_path)
+        cmd2 = 'echo BOOTPROTO=static >> {file_path}'\
                .format(file_path=file_path)
-        cmd3 = 'echo > ONBOOT=yes {file_path}'\
+        cmd3 = 'echo ONBOOT=yes >> {file_path}'\
                .format(file_path=file_path)
-        cmd4 = 'echo > USERCTL=no {file_path}'\
+        cmd4 = 'echo USERCTL=no >> {file_path}'\
                .format(file_path=file_path)
-        cmd5 = 'echo > VLAN=yes {file_path}'\
+        cmd5 = 'echo VLAN=yes >> {file_path}'\
                .format(file_path=file_path)
-        cmd6 = 'ifup {interface}.{vlan}'.format(interface=interface,
-                                                vlan=ext_vlan)
+
+        if host.os_name == 'rhel6':
+            cmd6 = 'ifdown {interface}.{vlan}'.format(interface=interface,
+                                                    vlan=ext_vlan)
+            cmd7 = 'ifup {interface}.{vlan}'.format(interface=interface,
+                                                    vlan=ext_vlan)
+        else:  # rhel7 or fedora
+            cmd6 = 'nmcli connection reload'
+            cmd7 = 'nmcli connection up {i}'.format(i=host.tenant_interface)
+
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
         host.run_bash_command(cmd3)
         host.run_bash_command(cmd4)
         host.run_bash_command(cmd5)
         host.run_bash_command(cmd6)
+        host.run_bash_command(cmd7)
 
     def register_to_rhn(self, host):
         LOG.info('{time} {fqdn}: registering to rhn'
@@ -227,7 +238,7 @@ class Configs(object):
             cmd7 = 'ifup {i}'.format(i=host.tenant_interface)
         else:  # rhel7 or fedora
             cmd6 = 'nmcli connection reload'
-            cmd7 = 'nmcli connection up {i}'.format(i=host.tenant_interface)
+            cmd7 = 'man nm'.format(i=host.tenant_interface)
 
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
