@@ -185,9 +185,11 @@ class Configs(object):
                .format(file_path=interface_file_path)
         cmd5 = 'echo VLAN=yes >> {file_path}'\
                .format(file_path=interface_file_path)
-        cmd6 = 'ifdown {interface_file_name}'\
+        cmd6 = 'echo NM_CONTROLLED=no >> {file_path}'\
+               .format(file_path=interface_file_path)
+        cmd7 = 'ifdown {interface_file_name}'\
                .format(interface_file_name=interface_file_name)
-        cmd7 = 'ifup {interface_file_name}'\
+        cmd8 = 'ifup {interface_file_name}'\
                .format(interface_file_name=interface_file_name)
 
         host.run_bash_command(cmd1)
@@ -197,6 +199,7 @@ class Configs(object):
         host.run_bash_command(cmd5)
         host.run_bash_command(cmd6)
         host.run_bash_command(cmd7)
+        host.run_bash_command(cmd8)
 
     def register_to_rhn(self, host):
         LOG.info('{time} {fqdn}: registering to rhn'
