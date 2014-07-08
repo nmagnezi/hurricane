@@ -236,8 +236,10 @@ class Configs(object):
                        file_path=interface_file_path)
         cmd5 = 'echo >> NETMASK=255.255.255.0 >> {file_path}'\
                .format(file_path=interface_file_path)
-        cmd6 = 'ifdown {i}'.format(i=host.tenant_interface)
-        cmd7 = 'ifup {i}'.format(i=host.tenant_interface)
+        cmd6 = 'ifdown {interface_file_name}'\
+               .format(interface_file_name=interface_file_name)
+        cmd7 = 'ifup {interface_file_name}'\
+               .format(interface_file_name=interface_file_name)
 
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
