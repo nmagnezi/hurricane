@@ -159,7 +159,7 @@ class Configs(object):
 
     def create_sub_interface(self, host):
         # TODO: do that only for netwoker nodes
-        ext_vlan = self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['ext_vlan']
+        ext_vlan = self.job_dict[JOB_CONFIG_FILE_SECTION]['ext_vlan']
         interface = host.tenant_interface
         file_path = '/etc/sysconfig/network-scripts/ifcfg-{interface}.{vlan}'\
                     .format(interface=interface, vlan=ext_vlan)
