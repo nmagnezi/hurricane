@@ -173,9 +173,10 @@ class Configs(object):
                          fqdn=host.fqdn,
                          interface_file_name=interface_file_name))
 
-        cmd1 = 'echo DEVICE="{interface_file_name}" > {file_path}'\
-               .format(interface_file_name=interface_file_name,
+        cmd1 = 'echo DEVICE="{name}.{vlan}" > {file_path}'\
+               .format(name=host.tenant_interface, vlan=ext_vlan,
                        file_path=interface_file_path)
+
         cmd2 = 'echo BOOTPROTO=dhcp >> {file_path}'\
                .format(file_path=interface_file_path)
         cmd3 = 'echo ONBOOT=yes >> {file_path}'\
@@ -220,7 +221,7 @@ class Configs(object):
             self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['tunneling_subnet']
 
         cmd1 = 'ifconfig {i}'.format(i=host.mgmt_interface) + \
-               "| grep -v inet6 | awk \'/inet/ {print $2}\' | cut -d\"\.\" -f 4"
+               " | grep -v inet6 | awk \'/inet/ {print $2}\' | cut -d\".\" -f 4"
 
         octate, stderr = host.run_bash_command(cmd1)
 
