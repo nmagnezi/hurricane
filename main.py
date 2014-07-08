@@ -22,7 +22,6 @@ JOB_CONFIG_FILE_PATH = os.path.join(JOB_CONFIG_FILE_DIRECTORY,
 CREDENTIALS_CONFIG_FILE_SECTION = 'credentials'
 INSTALLER_CONFIG_FILE_SECTION = 'general'
 CONSTANTS_CONFIG_FILE_SECTION = 'constants'
-ENVIRONMENT_CONFIG_FILE_SECTION = 'environment'
 
 SSH_TIMEOUT = 3
 
@@ -191,7 +190,7 @@ def hurricane():
         if main.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_installer'] == \
                 'packstack':
             if do_exec(
-                    main.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['ext_vlan']):
+                    main.job_dict[JOB_CONFIG_FILE_SECTION]['ext_vlan']):
                 main.config_networker_ext_net_interface()
             controller_host = main.determine_controller_host()
             controller_host.open_connection()
