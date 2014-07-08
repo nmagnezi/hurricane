@@ -20,6 +20,7 @@ class Packstack(object):
             job_dict[JOB_CONFIG_FILE_SECTION]['installer_conf_file']
         self.installer_conf_file_tags = \
             job_dict[JOB_CONFIG_FILE_SECTION]['installer_conf_file_tags']
+        self.ext_vlan = job_dict[JOB_CONFIG_FILE_SECTION]['ext_vlan']
         self.answer_file_dict = self.build_dict_from_file(
             os.path.join(INSTALLER_CONFIG_FILE_DIRCTORY,
                          self.packstack_answer_file_name) + '.ini')
@@ -110,6 +111,9 @@ class Packstack(object):
 
         tags_to_inject['tenant_int'] = []
         tags_to_inject['tenant_int'].append(controller.tenant_interface)
+        if not self.ext_vlan == '':
+            tags_to_inject['ext_vlan'] = []
+            tags_to_inject['ext_vlan'].append(self.ext_vlan)
 
         # inject tagged values to answer file
         for tag in tags_to_inject.keys():

@@ -169,9 +169,9 @@ class Configs(object):
                                                                '%H:%M:%S'),
                          fqdn=host.fqdn, interface=interface, vlan=ext_vlan))
 
-        cmd1 = 'echo DEVICE={interface}.{vlan} > {file_path}'\
+        cmd1 = 'echo DEVICE="{interface}.{vlan}" > {file_path}'\
                .format(interface=interface, vlan=ext_vlan, file_path=file_path)
-        cmd2 = 'echo BOOTPROTO=static >> {file_path}'\
+        cmd2 = 'echo BOOTPROTO=dhcp >> {file_path}'\
                .format(file_path=file_path)
         cmd3 = 'echo ONBOOT=yes >> {file_path}'\
                .format(file_path=file_path)
