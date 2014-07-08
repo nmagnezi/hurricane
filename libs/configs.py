@@ -160,34 +160,34 @@ class Configs(object):
     def create_sub_interface(self, host):
         # TODO: do that only for netwoker nodes
         ext_vlan = self.job_dict[JOB_CONFIG_FILE_SECTION]['ext_vlan']
-        interface = host.tenant_interface
-        file_path = '/etc/sysconfig/network-scripts/ifcfg-{interface}.{vlan}'\
-                    .format(interface=interface, vlan=ext_vlan)
+        interface_file_name = 'ifcfg-{name}.{vlan}'\
+                              .format(name=host.tenant_interface,
+                                      vlan=ext_vlan)
+        interface_file_location = '/etc/sysconfig/network-scripts'
+        interface_file_path = os.path.join(interface_file_location,
+                                           interface_file_name)
 
-        LOG.info('{time} {fqdn}: Creating sub interface: {interface}.{vlan}'
+        LOG.info('{time} {fqdn}: Creating sub interface: {interface_file_name}'
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
                                                                '%H:%M:%S'),
-                         fqdn=host.fqdn, interface=interface, vlan=ext_vlan))
+                         fqdn=host.fqdn,
+                         interface_file_name=interface_file_name))
 
-        cmd1 = 'echo DEVICE="{interface}.{vlan}" > {file_path}'\
-               .format(interface=interface, vlan=ext_vlan, file_path=file_path)
+        cmd1 = 'echo DEVICE="{interface_file_name}" > {file_path}'\
+               .format(interface_file_name=interface_file_name,
+                       file_path=interface_file_path)
         cmd2 = 'echo BOOTPROTO=dhcp >> {file_path}'\
-               .format(file_path=file_path)
+               .format(file_path=interface_file_path)
         cmd3 = 'echo ONBOOT=yes >> {file_path}'\
-               .format(file_path=file_path)
+               .format(file_path=interface_file_path)
         cmd4 = 'echo USERCTL=no >> {file_path}'\
-               .format(file_path=file_path)
+               .format(file_path=interface_file_path)
         cmd5 = 'echo VLAN=yes >> {file_path}'\
-               .format(file_path=file_path)
-
-        if host.os_name == 'rhel6':
-            cmd6 = 'ifdown {interface}.{vlan}'.format(interface=interface,
-                                                    vlan=ext_vlan)
-            cmd7 = 'ifup {interface}.{vlan}'.format(interface=interface,
-                                                    vlan=ext_vlan)
-        else:  # rhel7 or fedora
-            cmd6 = 'nmcli connection reload'
-            cmd7 = 'nmcli connection up {i}'.format(i=host.tenant_interface)
+               .format(file_path=interface_file_path)
+        cmd6 = 'ifdown {interface_file_name}'\
+               .format(interface_file_name=interface_file_name)
+        cmd7 = 'ifup {interface_file_name}'\
+               .format(interface_file_name=interface_file_name)
 
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
@@ -225,20 +225,18 @@ class Configs(object):
         octate, stderr = host.run_bash_command(cmd1)
 
         cmd2 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
-               .format(option='BOOTPROTO', value='STATIC',
+               .format(option='BOOTPROTO', value='static',
                        file_path=interface_file_path)
         cmd3 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
                .format(option='ONBOOT', value='yes',
                        file_path=interface_file_path)
-        cmd4 = 'echo >> IPADDR={tun_subnet}.{octate}'\
-               .format(tun_subnet=tun_subnet, octate=octate)
-        cmd5 = 'echo >> NETMASK=255.255.255.0'
-        if host.os_name == 'rhel6':
-            cmd6 = 'ifdown {i}'.format(i=host.tenant_interface)
-            cmd7 = 'ifup {i}'.format(i=host.tenant_interface)
-        else:  # rhel7 or fedora
-            cmd6 = 'nmcli connection reload'
-            cmd7 = 'man nm'.format(i=host.tenant_interface)
+        cmd4 = 'echo IPADDR={tun_subnet}.{octate} >> {file_path}'\
+               .format(tun_subnet=tun_subnet, octate=octate,
+                       file_path=interface_file_path)
+        cmd5 = 'echo >> NETMASK=255.255.255.0 >> {file_path}'\
+               .format(file_path=interface_file_path)
+        cmd6 = 'ifdown {i}'.format(i=host.tenant_interface)
+        cmd7 = 'ifup {i}'.format(i=host.tenant_interface)
 
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
