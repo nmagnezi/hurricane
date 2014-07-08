@@ -219,8 +219,8 @@ class Configs(object):
         tun_subnet = \
             self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['tunneling_subnet']
 
-        cmd1 = "ifconfig {i} | grep -v inet6 | awk \'/inet/ {print $2}\' | " \
-               "cut -d\"\.\" -f 4".format(i=host.mgmt_interface)
+        cmd1 = 'ifconfig {i}'.format(i=host.mgmt_interface) + \
+               "| grep -v inet6 | awk \'/inet/ {print $2}\' | cut -d\"\.\" -f 4"
 
         octate, stderr = host.run_bash_command(cmd1)
 
