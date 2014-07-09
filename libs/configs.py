@@ -244,7 +244,6 @@ class Configs(object):
         cmd7 = 'ifup {interface_file_name}'\
                .format(interface_file_name=interface_file_name)
 
-        host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
         host.run_bash_command(cmd3)
         host.run_bash_command(cmd4)
