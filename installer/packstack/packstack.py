@@ -11,6 +11,7 @@ INSTALLER_CONFIG_FILE_DEFAULT_PATH = '/root'
 INSTALLER_CONFIG_FILE_DIRCTORY = 'hurricane/installer/packstack'
 INSTALLER_CONFIG_FILE_SECTION = 'general'
 JOB_CONFIG_FILE_SECTION = 'job_params'
+ENVIRONMENT_CONFIG_FILE_SECTION = 'environment'
 
 
 class Packstack(object):
@@ -21,6 +22,8 @@ class Packstack(object):
         self.installer_conf_file_tags = \
             job_dict[JOB_CONFIG_FILE_SECTION]['installer_conf_file_tags']
         self.ext_vlan = job_dict[JOB_CONFIG_FILE_SECTION]['ext_vlan']
+        self.ntp_server = \
+            job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['default_ntp']
         self.answer_file_dict = self.build_dict_from_file(
             os.path.join(INSTALLER_CONFIG_FILE_DIRCTORY,
                          self.packstack_answer_file_name) + '.ini')
@@ -109,9 +112,16 @@ class Packstack(object):
 
         tags_to_inject['tenant_int'] = []
         tags_to_inject['tenant_int'].append(controller.tenant_interface)
+
+        tags_to_inject['ntp_server'] = []
+        tags_to_inject['ntp_server'].append(self.ntp_server)
+
         if not self.ext_vlan == '':
             tags_to_inject['ext_vlan'] = []
             tags_to_inject['ext_vlan'].append(self.ext_vlan)
+
+        LOG.info('Values to be configured in answer file: {tags}'
+                 .format(tags=tags_to_inject))
 
         # inject tagged values to answer file
         for tag in tags_to_inject.keys():

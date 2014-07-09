@@ -12,6 +12,7 @@ REPO_CONFIG_FILE_SECTION = 'repositories'
 CI_CONFIG_FILE_SECTION = 'ci'
 CREDENTIALS_CONFIG_FILE_SECTION = 'credentials'
 ENVIRONMENT_CONFIG_FILE_SECTION = 'environment'
+CONSTANTS_CONFIG_FILE_SECTION = 'constants'
 
 
 class Configs(object):
@@ -216,37 +217,46 @@ class Configs(object):
         host.run_bash_command(cmd)
 
     def create_tunnel_interface(self, host):
-        interface_file_location = '/etc/sysconfig/network-scripts'
-        interface_file_name = 'ifcfg-{name}'.format(name=host.tenant_interface)
-        interface_file_path = os.path.join(interface_file_location,
-                                           interface_file_name)
-        tun_subnet = \
-            self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['tunneling_subnet']
+        """
+        Assumption, vm type host can only be used as openstack controller
+        therefor, no need for tunnel interface.
+        :param host: the host in which the tunnel interface will be created in.
+        """
+        if not host.host_type == 'vm':
+            interface_file_location = '/etc/sysconfig/network-scripts'
+            interface_file_name = 'ifcfg-{name}'\
+                .format(name=host.tenant_interface)
+            interface_file_path = os.path.join(interface_file_location,
+                                               interface_file_name)
+            tun_subnet = \
+                self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION][
+                    'tunneling_subnet']
 
-        cmd1 = 'ifconfig {i}'.format(i=host.mgmt_interface) + \
-               " | grep -v inet6 | awk \'/inet/ {print $2}\' | cut -d\".\" -f 4"
+            cmd1 = 'ifconfig {i}'.format(i=host.mgmt_interface) + \
+                   " | grep -v inet6 | awk \'/inet/ {print $2}\'" \
+                   " | cut -d\".\" -f 4"
 
-        octate, stderr = host.run_bash_command(cmd1)
+            octate, stderr = host.run_bash_command(cmd1)
 
-        cmd2 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
-               .format(option='BOOTPROTO', value='static',
-                       file_path=interface_file_path)
-        cmd3 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
-               .format(option='ONBOOT', value='yes',
-                       file_path=interface_file_path)
-        cmd4 = 'echo IPADDR={tun_subnet}.{octate} >> {file_path}'\
-               .format(tun_subnet=tun_subnet, octate=octate,
-                       file_path=interface_file_path)
-        cmd5 = 'echo >> NETMASK=255.255.255.0 >> {file_path}'\
-               .format(file_path=interface_file_path)
-        cmd6 = 'ifdown {interface_file_name}'\
-               .format(interface_file_name=interface_file_name)
-        cmd7 = 'ifup {interface_file_name}'\
-               .format(interface_file_name=interface_file_name)
+            cmd2 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
+                   .format(option='BOOTPROTO', value='static',
+                           file_path=interface_file_path)
+            cmd3 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
+                   .format(option='ONBOOT', value='yes',
+                           file_path=interface_file_path)
+            cmd4 = 'echo IPADDR={tun_subnet}.{octate} >> {file_path}'\
+                   .format(tun_subnet=tun_subnet, octate=octate,
+                           file_path=interface_file_path)
+            cmd5 = 'echo NETMASK=255.255.255.0 >> {file_path}'\
+                   .format(file_path=interface_file_path)
+            cmd6 = 'ifdown {interface_file_name}'\
+                   .format(interface_file_name=interface_file_name)
+            cmd7 = 'ifup {interface_file_name}'\
+                   .format(interface_file_name=interface_file_name)
 
-        host.run_bash_command(cmd2)
-        host.run_bash_command(cmd3)
-        host.run_bash_command(cmd4)
-        host.run_bash_command(cmd5)
-        host.run_bash_command(cmd6)
-        host.run_bash_command(cmd7)
+            host.run_bash_command(cmd2)
+            host.run_bash_command(cmd3)
+            host.run_bash_command(cmd4)
+            host.run_bash_command(cmd5)
+            host.run_bash_command(cmd6)
+            host.run_bash_command(cmd7)

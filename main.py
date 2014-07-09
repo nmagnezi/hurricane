@@ -216,13 +216,6 @@ if __name__ == '__main__':
     hurricane()
 
 # TODO:
-# 1. add configurations (create tun interface, add br-ex ext port)
-# 2. exceptions handling - Started
-# 3. prep for tempest (later phase)
-# 4. docstring:
-
-#def ff():
-    """
-    Wait for condition to be true until timeout.
-    :param param_name: desc
-    """
+# 1. exceptions handling - Started
+# 2. prep for tempest (later phase)
+# 3. docstrings
