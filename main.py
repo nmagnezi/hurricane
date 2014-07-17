@@ -130,9 +130,9 @@ class Deployer(object):
 
         for host_fqdn in hosts_fqdn_list:
             cmd2 = 'sshpass -p {password} ssh-copy-id -i ~/.ssh/id_rsa.pub ' \
-                   'root@${fqdn}'.format(username=username,
-                                         password=password,
-                                         fqdn=host_fqdn)
+                   'root@{fqdn}'.format(username=username,
+                                        password=password,
+                                        fqdn=host_fqdn)
             host.run_bash_command(cmd2)
 
 
