@@ -13,48 +13,42 @@ LOG.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 LOG.addHandler(console)
 
-JOB_CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
-JOB_CONFIG_FILE_SECTION = 'job_params'
+JOB_CONFIG_FILE_DIRECTORY = 'config'
+#JOB_CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
+JOB_SECTION = 'job_params'
 JOB_CONFIG_FILE_NAME = 'config.ini'
 JOB_CONFIG_FILE_PATH = os.path.join(JOB_CONFIG_FILE_DIRECTORY,
                                     JOB_CONFIG_FILE_NAME)
 
-CREDENTIALS_CONFIG_FILE_SECTION = 'credentials'
-INSTALLER_CONFIG_FILE_SECTION = 'general'
-CONSTANTS_CONFIG_FILE_SECTION = 'constants'
+CREDENTIALS_SECTION = 'credentials'
+INSTALLER_SECTION = 'general'
+CONSTANTS_SECTION = 'constants'
 
 SSH_TIMEOUT = 3
 
 
 class Deployer(object):
 
-    def __init__(self):
-        self.job_dict = self.build_dict_from_file(JOB_CONFIG_FILE_PATH)
+    def __init__(self, job_dict):
+        self.job_dict = job_dict
         self.check_hosts_connectivity()
-        self.provisioner = self.init_provisioner()
         self.installer = self.init_installer()
         self.openstack_hosts = self.build_hosts_list()
         self.configurations = Configs(self.job_dict)
 
     def check_hosts_connectivity(self):
-        hosts_and_roles = \
-            self.job_dict[JOB_CONFIG_FILE_SECTION]['hosts_and_roles']
-        username = \
-            self.job_dict[CREDENTIALS_CONFIG_FILE_SECTION]['default_user']
-        password = \
-            self.job_dict[CREDENTIALS_CONFIG_FILE_SECTION]['default_pass']
-
-        for host in hosts_and_roles.split(", "):
-            host_fqdn = host.split('/')[0]
+        username = self.job_dict[CREDENTIALS_SECTION]['default_user']
+        password = self.job_dict[CREDENTIALS_SECTION]['default_pass']
+        hosts_and_roles = self.job_dict[JOB_SECTION]['hosts_and_roles']
+        hosts_fqdn_list = [i.split('/')[0] for i in hosts_and_roles.split(", ")]
+        for host_fqdn in hosts_fqdn_list:
             LOG.info('Checking {fqdn} availability via SSH'.format(
                 fqdn=host_fqdn))
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             try:
-                ssh.connect(hostname=host_fqdn,
-                            username=username,
-                            password=password,
-                            timeout=SSH_TIMEOUT)
+                ssh.connect(hostname=host_fqdn, username=username,
+                            password=password, timeout=SSH_TIMEOUT)
             except Exception as e:
                 LOG.info('Failed to establish SSH connection to {fqdn}'
                          .format(fqdn=host_fqdn))
@@ -65,32 +59,16 @@ class Deployer(object):
                          .format(fqdn=host_fqdn))
                 ssh.close()
 
-
-    def build_dict_from_file(self, conf):
-        config_file = ConfigParser()
-        config_file.read(conf)
-        file_dict = {}
-        for section in config_file.sections():
-            file_dict[section] = {}
-            for option in config_file.options(section):
-                file_dict[section][option] = config_file.get(section, option)
-        return file_dict
-
     def init_installer(self):
         """WIP"""
-        installer_name = \
-            self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_installer']
+        installer_name = self.job_dict[JOB_SECTION]['openstack_installer']
         if installer_name == 'packstack':
             return Packstack(self.job_dict)
-        elif installer_name =='foreman':
+        elif installer_name == 'foreman':
             return Foreman(self.job_dict)
 
-    def init_provisioner(self):
-        return Provisioning(self.job_dict)
-
     def build_hosts_list(self):
-        hosts_and_roles = \
-            self.job_dict[JOB_CONFIG_FILE_SECTION]['hosts_and_roles']
+        hosts_and_roles = self.job_dict[JOB_SECTION]['hosts_and_roles']
         openstack_hosts = []
 
         for host_and_role in hosts_and_roles.split(", "):
@@ -105,8 +83,7 @@ class Deployer(object):
         for openstack_host in self.openstack_hosts:
             openstack_host.open_connection()
             for repo in repos_list.split(", "):
-                self.configurations.create_yum_repo(openstack_host,
-                                                    repo, build)
+                self.configurations.create_yum_repo(openstack_host, repo, build)
             openstack_host.close_connection()
 
     def config_all_openstack_hosts(self, configs_list):
@@ -116,11 +93,10 @@ class Deployer(object):
                 getattr(self.configurations, config)(openstack_host)
 
     def config_networker_ext_net_interface(self):
-        installer_name = \
-            self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_installer']
+        installer_name = self.job_dict[JOB_SECTION]['openstack_installer']
         networker_option = installer_name + '_networker'
         networker_option_name = \
-            self.job_dict[CONSTANTS_CONFIG_FILE_SECTION][networker_option]
+            self.job_dict[CONSTANTS_SECTION][networker_option]
         networker_role_name = \
             self.installer.get_tagged_value(networker_option_name)
         for tmp_host in self.openstack_hosts:
@@ -128,11 +104,10 @@ class Deployer(object):
                 self.configurations.create_sub_interface(tmp_host)
 
     def determine_controller_host(self):
-        installer_name = \
-            self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_installer']
+        installer_name = self.job_dict[JOB_SECTION]['openstack_installer']
         controller_option = installer_name + '_controller'
         controller_option_name = \
-            self.job_dict[CONSTANTS_CONFIG_FILE_SECTION][controller_option]
+            self.job_dict[CONSTANTS_SECTION][controller_option]
         controller_role_name = \
             self.installer.get_tagged_value(controller_option_name)
         for tmp_host in self.openstack_hosts:
@@ -141,16 +116,26 @@ class Deployer(object):
                          .format(fqdn=tmp_host.fqdn))
                 return tmp_host
 
-    def print_job_dict(self):
-        LOG.info('*************')
-        LOG.info('Job Variables')
-        LOG.info('*************')
-        LOG.info('[{section}]'.format(section=JOB_CONFIG_FILE_SECTION))
-        for option in self.job_dict[JOB_CONFIG_FILE_SECTION]:
-            LOG.info(
-                '{option}: {value}'
-                .format(option=option,
-                        value=self.job_dict[JOB_CONFIG_FILE_SECTION][option]))
+
+def build_dict_from_file(conf):
+    config_file = ConfigParser()
+    config_file.read(conf)
+    file_dict = {}
+    for section in config_file.sections():
+        file_dict[section] = {}
+        for option in config_file.options(section):
+            file_dict[section][option] = config_file.get(section, option)
+    return file_dict
+
+
+def print_job_dict(job_dict):
+    LOG.info('==============')
+    LOG.info('Job Variables:')
+    LOG.info('==============')
+    LOG.info('[{section}]'.format(section=JOB_SECTION))
+    for option in job_dict[JOB_SECTION]:
+        LOG.info('{option}: {value}'
+                 .format(option=option, value=job_dict[JOB_SECTION][option]))
 
 
 def do_exec(value):
@@ -162,35 +147,39 @@ def do_exec(value):
 
 
 def hurricane():
-    main = Deployer()
-    main.print_job_dict()
+    job_dict = build_dict_from_file(JOB_CONFIG_FILE_PATH)
+    print_job_dict(job_dict)
+
     # Reprovision Hosts via foreman
-    if do_exec(main.job_dict[JOB_CONFIG_FILE_SECTION]['reprovision']):
-        main.provisioner.provision_hosts(main.openstack_hosts)
+    if do_exec(job_dict[JOB_SECTION]['reprovision']):
+        provisioner = Provisioning(job_dict)
+        hosts_fqdn_list = [i.split('/')[0] for i in
+                           job_dict[JOB_SECTION]['hosts_and_roles'].split(", ")]
+        provisioner.provision_hosts(hosts_fqdn_list)
     else:
         LOG.info('Reprovisioning disabled, Skipping...')
 
-    if do_exec(main.job_dict[JOB_CONFIG_FILE_SECTION]['repositories']):
+    main = Deployer(job_dict)
+
+    if do_exec(main.job_dict[JOB_SECTION]['repositories']):
         # Configure repositories
         main.config_all_openstack_hosts('remove_all_yum_repos')
         main.create_yum_repos_all_openstack_hosts(
-            main.job_dict[JOB_CONFIG_FILE_SECTION]['repositories'],
-            main.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_build'])
+            main.job_dict[JOB_SECTION]['repositories'],
+            main.job_dict[JOB_SECTION]['openstack_build'])
     else:
         LOG.info('Repository list is empty, Skipping...')
 
     # Pre installation configurations
-    if do_exec(main.job_dict[JOB_CONFIG_FILE_SECTION]['pre_install_configs']):
+    if do_exec(main.job_dict[JOB_SECTION]['pre_install_configs']):
         main.config_all_openstack_hosts(
-            main.job_dict[JOB_CONFIG_FILE_SECTION]['pre_install_configs'])
+            main.job_dict[JOB_SECTION]['pre_install_configs'])
     else:
         LOG.info('Pre installation configurations list is empty, Skipping...')
 
-    if do_exec(main.job_dict[JOB_CONFIG_FILE_SECTION]['install_openstack']):
-        if main.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_installer'] == \
-                'packstack':
-            if do_exec(
-                    main.job_dict[JOB_CONFIG_FILE_SECTION]['ext_vlan']):
+    if do_exec(main.job_dict[JOB_SECTION]['install_openstack']):
+        if main.job_dict[JOB_SECTION]['openstack_installer'] == 'packstack':
+            if do_exec(main.job_dict[JOB_SECTION]['ext_vlan']):
                 main.config_networker_ext_net_interface()
             controller_host = main.determine_controller_host()
             controller_host.open_connection()
@@ -205,9 +194,9 @@ def hurricane():
         LOG.info('OpenStack installation set to false, Skipping...')
 
     # Pre installation configurations
-    if do_exec(main.job_dict[JOB_CONFIG_FILE_SECTION]['post_install_configs']):
+    if do_exec(main.job_dict[JOB_SECTION]['post_install_configs']):
         main.config_all_openstack_hosts(
-            main.job_dict[JOB_CONFIG_FILE_SECTION]['Post_install_configs'])
+            main.job_dict[JOB_SECTION]['Post_install_configs'])
     else:
         LOG.info('Post installation configurations list is empty, Skipping...')
 
@@ -219,4 +208,3 @@ if __name__ == '__main__':
 # 1. exceptions handling - Started
 # 2. prep for tempest (later phase)
 # 3. docstrings
-# 4.

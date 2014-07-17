@@ -7,12 +7,13 @@ LOG.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 LOG.addHandler(console)
 
-CREDENTIALS_CONFIG_FILE_SECTION = 'credentials'
-INSTALLER_CONFIG_FILE_SECTION = 'job_params'
-OS_NAMES_CONFIG_FILE_SECTION = 'server_os'
-ENVIRONMENT_CONFIG_FILE_SECTION = 'environment'
+CREDENTIALS_SECTION = 'credentials'
+INSTALLER_SECTION = 'job_params'
+OS_NAMES_SECTION = 'server_os'
+ENVIRONMENT_SECTION = 'environment'
 
 SSH_TIMEOUT = 3
+
 
 class Host(object):
 
@@ -20,11 +21,8 @@ class Host(object):
         self.fqdn = fqdn
         self.role = role
         self.hostname = fqdn.split('.')[0]
-
-        self.username = \
-            job_dict[CREDENTIALS_CONFIG_FILE_SECTION]['default_user']
-        self.password = \
-            job_dict[CREDENTIALS_CONFIG_FILE_SECTION]['default_pass']
+        self.username = job_dict[CREDENTIALS_SECTION]['default_user']
+        self.password = job_dict[CREDENTIALS_SECTION]['default_pass']
         self.ssh = paramiko.SSHClient()
         self.host_type, self.ip_address, self.os_name, self.mgmt_interface, \
             self.tenant_interface = self.get_host_info(job_dict)
@@ -56,8 +54,8 @@ class Host(object):
 
     def get_os_name(self, job_dict):
         os_str, stderr = self.run_bash_command('cat /etc/system-release')
-        for os_name in job_dict[OS_NAMES_CONFIG_FILE_SECTION].keys():
-                if job_dict[OS_NAMES_CONFIG_FILE_SECTION][os_name] == \
+        for os_name in job_dict[OS_NAMES_SECTION].keys():
+                if job_dict[OS_NAMES_SECTION][os_name] == \
                         os_str.strip():
                     return os_name
 
@@ -79,8 +77,7 @@ class Host(object):
             cmd = "ifconfig | awk '/mtu/ {print $1}' | sed -e s/\:\//g"
             nics_string, stderr = self.run_bash_command(cmd)
             nics_list = nics_string.split('\n')
-            tenant_nic_speed = \
-                job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['tenant_nic_speed']
+            tenant_nic_speed = job_dict[ENVIRONMENT_SECTION]['tenant_nic_speed']
             for nic in nics_list:
                 cmd = "ethtool {nic} ".format(nic=nic) + \
                       "| awk '/Speed/ {print $2}'"
@@ -95,10 +92,8 @@ class Host(object):
 
     def open_connection(self):
         self.ssh.set_missing_host_key_policy(paramiko.WarningPolicy())
-        self.ssh.connect(hostname=self.fqdn,
-                         username=self.username,
-                         password=self.password,
-                         timeout=SSH_TIMEOUT)
+        self.ssh.connect(hostname=self.fqdn, username=self.username,
+                         password=self.password, timeout=SSH_TIMEOUT)
 
     def close_connection(self):
         self.ssh.close()

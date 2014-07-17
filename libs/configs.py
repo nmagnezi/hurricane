@@ -10,9 +10,9 @@ LOG.addHandler(console)
 JOB_CONFIG_FILE_SECTION = 'job_params'
 REPO_CONFIG_FILE_SECTION = 'repositories'
 CI_CONFIG_FILE_SECTION = 'ci'
-CREDENTIALS_CONFIG_FILE_SECTION = 'credentials'
-ENVIRONMENT_CONFIG_FILE_SECTION = 'environment'
-CONSTANTS_CONFIG_FILE_SECTION = 'constants'
+CREDENTIALS_SECTION = 'credentials'
+ENVIRONMENT_SECTION = 'environment'
+CONSTANTS_SECTION = 'constants'
 
 
 class Configs(object):
@@ -98,7 +98,6 @@ class Configs(object):
 
     def disable_epel(self, host):
         self.yum_disable_repo(host, 'epel')
-
 
     def disable_and_persist_selinux(self, host):
         LOG.info('{time} {fqdn}: disabling SELinux on host {host}'
@@ -207,8 +206,8 @@ class Configs(object):
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
                                                                '%H:%M:%S'),
                          fqdn=host.fqdn))
-        rhn_user = self.job_dict[CREDENTIALS_CONFIG_FILE_SECTION]['rhn_user']
-        rhn_pass = self.job_dict[CREDENTIALS_CONFIG_FILE_SECTION]['rhn_pass']
+        rhn_user = self.job_dict[CREDENTIALS_SECTION]['rhn_user']
+        rhn_pass = self.job_dict[CREDENTIALS_SECTION]['rhn_pass']
         cmd = 'rhnreg_ks --serverUrl=https://xmlrpc.rhn.redhat.com/XMLRPC ' \
               '--username={rhn_user} --password={rhn_pass} ' \
               '--profilename={fqdn} --nohardware --novirtinfo' \
@@ -228,9 +227,7 @@ class Configs(object):
                 .format(name=host.tenant_interface)
             interface_file_path = os.path.join(interface_file_location,
                                                interface_file_name)
-            tun_subnet = \
-                self.job_dict[ENVIRONMENT_CONFIG_FILE_SECTION][
-                    'tunneling_subnet']
+            tun_subnet = self.job_dict[ENVIRONMENT_SECTION]['tunneling_subnet']
 
             cmd1 = 'ifconfig {i}'.format(i=host.mgmt_interface) + \
                    " | grep -v inet6 | awk \'/inet/ {print $2}\'" \

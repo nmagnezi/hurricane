@@ -8,22 +8,22 @@ console = logging.StreamHandler()
 LOG.addHandler(console)
 
 INSTALLER_CONFIG_FILE_DEFAULT_PATH = '/root'
-INSTALLER_CONFIG_FILE_DIRCTORY = 'hurricane/installer/packstack'
+INSTALLER_CONFIG_FILE_DIRCTORY = 'installer/packstack'
+#INSTALLER_CONFIG_FILE_DIRCTORY = 'hurricane/installer/packstack'
 INSTALLER_CONFIG_FILE_SECTION = 'general'
-JOB_CONFIG_FILE_SECTION = 'job_params'
-ENVIRONMENT_CONFIG_FILE_SECTION = 'environment'
+JOB_SECTION = 'job_params'
+ENVIRONMENT_SECTION = 'environment'
 
 
 class Packstack(object):
 
     def __init__(self, job_dict):
         self.packstack_answer_file_name = \
-            job_dict[JOB_CONFIG_FILE_SECTION]['installer_conf_file']
+            job_dict[JOB_SECTION]['installer_conf_file']
         self.installer_conf_file_tags = \
-            job_dict[JOB_CONFIG_FILE_SECTION]['installer_conf_file_tags']
-        self.ext_vlan = job_dict[JOB_CONFIG_FILE_SECTION]['ext_vlan']
-        self.ntp_server = \
-            job_dict[ENVIRONMENT_CONFIG_FILE_SECTION]['default_ntp']
+            job_dict[JOB_SECTION]['installer_conf_file_tags']
+        self.ext_vlan = job_dict[JOB_SECTION]['ext_vlan']
+        self.ntp_server = job_dict[ENVIRONMENT_SECTION]['default_ntp']
         self.answer_file_dict = self.build_dict_from_file(
             os.path.join(INSTALLER_CONFIG_FILE_DIRCTORY,
                          self.packstack_answer_file_name) + '.ini')
