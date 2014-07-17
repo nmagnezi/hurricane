@@ -115,6 +115,26 @@ class Deployer(object):
                          .format(fqdn=tmp_host.fqdn))
                 return tmp_host
 
+    def generate_ssh_key(self, host):
+        cmd = 'yes | ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa'
+        host.run_bash_command(cmd)
+
+    def distribute_public_key_to_openstack_hosts(self, host):
+        username = self.job_dict[CREDENTIALS_SECTION]['default_user']
+        password = self.job_dict[CREDENTIALS_SECTION]['default_pass']
+        hosts_and_roles = self.job_dict[JOB_SECTION]['hosts_and_roles']
+        hosts_fqdn_list = [i.split('/')[0] for i in hosts_and_roles.split(", ")]
+
+        cmd1 = 'echo "StrictHostKeyChecking no" > /{username}/.ssh/config'
+        host.run_bash_command(cmd1)
+
+        for host_fqdn in hosts_fqdn_list:
+            cmd2 = 'sshpass -p {password} ssh-copy-id -i ~/.ssh/id_rsa.pub ' \
+                   'root@${fqdn}'.format(username=username,
+                                         password=password,
+                                         fqdn=host_fqdn)
+            host.run_bash_command(cmd2)
+
 
 def build_dict_from_file(conf):
     config_file = ConfigParser()
@@ -182,6 +202,8 @@ def hurricane():
                 main.config_networker_ext_net_interface()
             controller_host = main.determine_controller_host()
             controller_host.open_connection()
+            main.generate_ssh_key(controller_host)
+            main.distribute_public_key_to_openstack_hosts(controller_host)
             main.configurations.install_rpm(controller_host,
                                             'openstack-packstack')
             main.installer.generate_answer_file(controller_host)
