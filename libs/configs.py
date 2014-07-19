@@ -104,7 +104,7 @@ class Configs(object):
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
                                                                '%H:%M:%S'),
                          fqdn=host.fqdn))
-        cmd = "sed -i s/lab\.\bos/eng\.\tlv/g /etc/yum.repos.d/rhos-release*"
+        cmd = "sed -i s/lab.bos/eng.tlv/g /etc/yum.repos.d/rhos-release*"
         host.run_bash_command(cmd)
 
     def disable_and_persist_selinux(self, host):
