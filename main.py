@@ -125,7 +125,7 @@ class Deployer(object):
         hosts_and_roles = self.job_dict[JOB_SECTION]['hosts_and_roles']
         hosts_fqdn_list = [i.split('/')[0] for i in hosts_and_roles.split(", ")]
 
-        cmd1 = 'echo "StrictHostKeyChecking no" > /{username}/.ssh/config'
+        cmd1 = 'echo "StrictHostKeyChecking no" > /root/.ssh/config'
         host.run_bash_command(cmd1)
 
         for host_fqdn in hosts_fqdn_list:
