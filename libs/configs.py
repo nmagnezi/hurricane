@@ -131,7 +131,7 @@ class Configs(object):
         openstack_build = \
             self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_build']
         cmd1 = 'rhos-release 3'
-        cmd2 = 'sed -i s/"latest\/\RHOS-3.0"/"${puddle}\/\RHOS-3.0"/g ' \
+        cmd2 = 'sed -i s/"latest\/\RHOS-3.0"/"{puddle}\/\RHOS-3.0"/g ' \
                '/etc/yum.repos.d/rhos-release*'.format(puddle=openstack_build)
 
         host.run_bash_command(cmd1)
@@ -142,7 +142,7 @@ class Configs(object):
         openstack_build = \
             self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_build']
         cmd1 = 'rhos-release 4'
-        cmd2 = 'sed -i s/"latest\/\RHOS-4.0"/"${puddle}\/\RHOS-4.0"/g ' \
+        cmd2 = 'sed -i s/"latest\/\RHOS-4.0"/"{puddle}\/\RHOS-4.0"/g ' \
                '/etc/yum.repos.d/rhos-release*'.format(puddle=openstack_build)
 
         host.run_bash_command(cmd1)
@@ -158,12 +158,12 @@ class Configs(object):
         cmd1 = 'rhos-release 5'
         if operating_system == 'rhel6.5':
             cmd2 = 'sed -i ' \
-                   's/"latest\/\RH6-RHOS-5.0"/"${puddle}\/\RH6-RHOS-5.0"/g ' \
+                   's/"latest\/\RH6-RHOS-5.0"/"{puddle}\/\RH6-RHOS-5.0"/g ' \
                    '/etc/yum.repos.d/rhos-release*'\
                    .format(puddle=openstack_build)
         else:  # operating_system == 'rhel7.0'
             cmd2 = 'sed -i ' \
-                   's/"latest\/\RH7-RHOS-5.0"/"${puddle}\/\RH7-RHOS-5.0"/g ' \
+                   's/"latest\/\RH7-RHOS-5.0"/"{puddle}\/\RH7-RHOS-5.0"/g ' \
                    '/etc/yum.repos.d/rhos-release*'\
                    .format(puddle=openstack_build)
 
