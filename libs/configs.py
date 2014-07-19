@@ -99,6 +99,14 @@ class Configs(object):
     def disable_epel(self, host):
         self.yum_disable_repo(host, 'epel')
 
+    def tlv_openstack_repo(self, host):
+        LOG.info('{time} {fqdn}: updating OpenStack repo path'
+                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
+                                                               '%H:%M:%S'),
+                         fqdn=host.fqdn))
+        cmd = "sed -i s/lab\.\bos/eng\.\tlv/g /etc/yum.repos.d/rhos-release*"
+        host.run_bash_command(cmd)
+
     def disable_and_persist_selinux(self, host):
         LOG.info('{time} {fqdn}: disabling SELinux on host {host}'
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
@@ -118,15 +126,49 @@ class Configs(object):
         rpm_url = self.job_dict[CI_CONFIG_FILE_SECTION]['rhos-release']
         self.install_rpm(host, rpm_url)
 
+    def rhos_release_grizzly(self, host):
+        self.rhos_release(host)
+        openstack_build = \
+            self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_build']
+        cmd1 = 'rhos-release 3'
+        cmd2 = 'sed -i s/"latest\/\RHOS-3.0"/"${puddle}\/\RHOS-3.0"/g ' \
+               '/etc/yum.repos.d/rhos-release*'.format(puddle=openstack_build)
+
+        host.run_bash_command(cmd1)
+        host.run_bash_command(cmd2)
+
     def rhos_release_havana(self, host):
         self.rhos_release(host)
-        cmd = 'rhos-release 4'
-        host.run_bash_command(cmd)
+        openstack_build = \
+            self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_build']
+        cmd1 = 'rhos-release 4'
+        cmd2 = 'sed -i s/"latest\/\RHOS-4.0"/"${puddle}\/\RHOS-4.0"/g ' \
+               '/etc/yum.repos.d/rhos-release*'.format(puddle=openstack_build)
+
+        host.run_bash_command(cmd1)
+        host.run_bash_command(cmd2)
 
     def rhos_release_icehouse(self, host):
         self.rhos_release(host)
-        cmd = 'rhos-release 5'
-        host.run_bash_command(cmd)
+        openstack_build = \
+            self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_build']
+        operating_system = \
+            self.job_dict[JOB_CONFIG_FILE_SECTION]['operating_system']
+
+        cmd1 = 'rhos-release 5'
+        if operating_system == 'rhel6.5':
+            cmd2 = 'sed -i ' \
+                   's/"latest\/\RH6-RHOS-5.0"/"${puddle}\/\RH6-RHOS-5.0"/g ' \
+                   '/etc/yum.repos.d/rhos-release*'\
+                   .format(puddle=openstack_build)
+        else:  # operating_system == 'rhel7.0'
+            cmd2 = 'sed -i ' \
+                   's/"latest\/\RH7-RHOS-5.0"/"${puddle}\/\RH7-RHOS-5.0"/g ' \
+                   '/etc/yum.repos.d/rhos-release*'\
+                   .format(puddle=openstack_build)
+
+        host.run_bash_command(cmd1)
+        host.run_bash_command(cmd2)
 
     def restart_linux_service(self, host, service_name):
         LOG.info('{time} {fqdn}: restarting {service_name}'
