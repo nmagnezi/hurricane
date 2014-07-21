@@ -74,7 +74,10 @@ class Host(object):
         if host_type == 'vm':
             return self.get_mgmt_interface()
         elif host_type == 'baremetal':
-            cmd = "ifconfig | awk '/mtu/ {print $1}' | sed -e s/\:\//g"
+            if self.os_name == 'rhel6.5':
+                cmd = "ifconfig | awk '/HWaddr/ {print $1}' | sed -e s/\:\//g"
+            else:  # rhel7.0
+                cmd = "ifconfig | awk '/mtu/ {print $1}' | sed -e s/\:\//g"
             nics_string, stderr = self.run_bash_command(cmd)
             nics_list = nics_string.split('\n')
             tenant_nic_speed = job_dict[ENVIRONMENT_SECTION]['tenant_nic_speed']
