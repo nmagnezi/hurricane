@@ -34,7 +34,7 @@ class Host(object):
         ip_address = self.get_host_ip_address()
         os_name = self.get_os_name(job_dict)
         mgmt_interface = self.get_mgmt_interface()
-        tenant_interface = self.get_tenant_interface(job_dict)
+        tenant_interface = self.get_tenant_interface(job_dict, os_name)
         self.close_connection()
         return host_type, ip_address, os_name, mgmt_interface, tenant_interface
 
@@ -64,7 +64,7 @@ class Host(object):
         mgmt_interface, stderr = self.run_bash_command(cmd)
         return mgmt_interface.strip()
 
-    def get_tenant_interface(self, job_dict):
+    def get_tenant_interface(self, job_dict, os_name):
         """
         assumption: on baremetal machines, the tenant nic
         a. has no ip address
@@ -74,7 +74,7 @@ class Host(object):
         if host_type == 'vm':
             return self.get_mgmt_interface()
         elif host_type == 'baremetal':
-            if self.os_name == 'rhel6.5':
+            if os_name == 'rhel6.5':
                 cmd = "ifconfig | awk '/HWaddr/ {print $1}' | sed -e s/\:\//g"
             else:  # rhel7.0
                 cmd = "ifconfig | awk '/mtu/ {print $1}' | sed -e s/\:\//g"
