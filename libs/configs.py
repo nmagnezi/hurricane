@@ -1,18 +1,12 @@
 import logging
 import datetime
 import os
+import config.constants as c
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 LOG.addHandler(console)
-
-JOB_CONFIG_FILE_SECTION = 'job_params'
-REPO_CONFIG_FILE_SECTION = 'repositories'
-CI_CONFIG_FILE_SECTION = 'ci'
-CREDENTIALS_SECTION = 'credentials'
-ENVIRONMENT_SECTION = 'environment'
-CONSTANTS_SECTION = 'constants'
 
 
 class Configs(object):
@@ -27,7 +21,7 @@ class Configs(object):
                                                                '%H:%M:%S'),
                          fqdn=host.fqdn, repo_name=repo_name))
 
-        repo_url = self.job_dict[REPO_CONFIG_FILE_SECTION][repo_name]
+        repo_url = self.job_dict[c.REPO][repo_name]
         if '{build}' in repo_url:  # check if there is a build number to inject
             repo_url = str(repo_url).format(build=build)
 
@@ -77,7 +71,7 @@ class Configs(object):
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
                                                                '%H:%M:%S'),
                          fqdn=host.fqdn, rpm=rpm_name))
-        cmd = 'yum install -y {rpm}'.format(rpm=rpm_name)
+        cmd = 'yum install -y --nogpgcheck {rpm}'.format(rpm=rpm_name)
         host.run_bash_command(cmd)
 
     def uninstall_rpm(self, host, rpm_name):
@@ -108,7 +102,7 @@ class Configs(object):
         host.run_bash_command(cmd)
 
     def disable_and_persist_selinux(self, host):
-        LOG.info('{time} {fqdn}: disabling SELinux on host {host}'
+        LOG.info('{time} {fqdn}: disabling SELinux'
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
                                                                '%H:%M:%S'),
                          fqdn=host.fqdn))
@@ -123,13 +117,13 @@ class Configs(object):
         host.run_bash_command(cmd3)
 
     def rhos_release(self, host):
-        rpm_url = self.job_dict[CI_CONFIG_FILE_SECTION]['rhos-release']
+        rpm_url = self.job_dict[c.CI]['rhos-release']
         self.install_rpm(host, rpm_url)
 
     def rhos_release_grizzly(self, host):
         self.rhos_release(host)
         openstack_build = \
-            self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_build']
+            self.job_dict[c.JOB]['openstack_build']
         cmd1 = 'rhos-release 3'
         cmd2 = 'sed -i s/"latest\/\RHOS-3.0"/"{puddle}\/\RHOS-3.0"/g ' \
                '/etc/yum.repos.d/rhos-release*'.format(puddle=openstack_build)
@@ -140,7 +134,7 @@ class Configs(object):
     def rhos_release_havana(self, host):
         self.rhos_release(host)
         openstack_build = \
-            self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_build']
+            self.job_dict[c.JOB]['openstack_build']
         cmd1 = 'rhos-release 4'
         cmd2 = 'sed -i s/"latest\/\RHOS-4.0"/"{puddle}\/\RHOS-4.0"/g ' \
                '/etc/yum.repos.d/rhos-release*'.format(puddle=openstack_build)
@@ -150,10 +144,8 @@ class Configs(object):
 
     def rhos_release_icehouse(self, host):
         self.rhos_release(host)
-        openstack_build = \
-            self.job_dict[JOB_CONFIG_FILE_SECTION]['openstack_build']
-        operating_system = \
-            self.job_dict[JOB_CONFIG_FILE_SECTION]['operating_system']
+        openstack_build = self.job_dict[c.JOB]['openstack_build']
+        operating_system = self.job_dict[c.JOB]['operating_system']
 
         cmd1 = 'rhos-release 5'
         if operating_system == 'rhel6.5':
@@ -201,10 +193,9 @@ class Configs(object):
 
     def create_sub_interface(self, host):
         # TODO: do that only for netwoker nodes
-        ext_vlan = self.job_dict[JOB_CONFIG_FILE_SECTION]['ext_vlan']
+        ext_vlan = self.job_dict[c.JOB]['ext_vlan']
         interface_file_name = 'ifcfg-{name}.{vlan}'\
-                              .format(name=host.tenant_interface,
-                                      vlan=ext_vlan)
+                              .format(name=host.tenant_interface, vlan=ext_vlan)
         interface_file_location = '/etc/sysconfig/network-scripts'
         interface_file_path = os.path.join(interface_file_location,
                                            interface_file_name)
@@ -218,7 +209,6 @@ class Configs(object):
         cmd1 = 'echo DEVICE="{name}.{vlan}" > {file_path}'\
                .format(name=host.tenant_interface, vlan=ext_vlan,
                        file_path=interface_file_path)
-
         cmd2 = 'echo BOOTPROTO=dhcp >> {file_path}'\
                .format(file_path=interface_file_path)
         cmd3 = 'echo ONBOOT=yes >> {file_path}'\
@@ -233,7 +223,6 @@ class Configs(object):
                .format(interface_file_name=interface_file_name)
         cmd8 = 'ifup {interface_file_name}'\
                .format(interface_file_name=interface_file_name)
-
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
         host.run_bash_command(cmd3)
@@ -248,8 +237,8 @@ class Configs(object):
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
                                                                '%H:%M:%S'),
                          fqdn=host.fqdn))
-        rhn_user = self.job_dict[CREDENTIALS_SECTION]['rhn_user']
-        rhn_pass = self.job_dict[CREDENTIALS_SECTION]['rhn_pass']
+        rhn_user = self.job_dict[c.CREDENTIALS]['rhn_user']
+        rhn_pass = self.job_dict[c.CREDENTIALS]['rhn_pass']
         cmd = 'rhnreg_ks --serverUrl=https://xmlrpc.rhn.redhat.com/XMLRPC ' \
               '--username={rhn_user} --password={rhn_pass} ' \
               '--profilename={fqdn} --nohardware --novirtinfo' \
@@ -269,7 +258,7 @@ class Configs(object):
                 .format(name=host.tenant_interface)
             interface_file_path = os.path.join(interface_file_location,
                                                interface_file_name)
-            tun_subnet = self.job_dict[ENVIRONMENT_SECTION]['tunneling_subnet']
+            tun_subnet = self.job_dict[c.ENVIRONMENT]['tunneling_subnet']
 
             cmd1 = 'ifconfig {i}'.format(i=host.mgmt_interface) + \
                    " | grep -v inet6 | awk \'/inet/ {print $2}\'" \
@@ -299,3 +288,19 @@ class Configs(object):
             host.run_bash_command(cmd5)
             host.run_bash_command(cmd6)
             host.run_bash_command(cmd7)
+
+    def disable_nm(self, host):
+        """
+        Disable NetworkManager due to a known issue.
+        """
+        LOG.info('{time} {fqdn}: Switching off NetworkManager'
+                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
+                                                               '%H:%M:%S'),
+                         fqdn=host.fqdn))
+        cmd1 = 'systemctl disable NetworkManager'
+        cmd2 = 'systemctl stop NetworkManager'
+        cmd3 = 'systemctl restart network'
+
+        host.run_bash_command(cmd1)
+        host.run_bash_command(cmd2)
+        host.run_bash_command(cmd3)

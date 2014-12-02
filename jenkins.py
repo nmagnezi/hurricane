@@ -12,6 +12,7 @@ LOG.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 LOG.addHandler(console)
 
+#Constants
 ENV_VARIABLE_PREFIX = 'DEPLOYER_'
 CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
 CONFIG_FILE_SECTION = 'job_params'

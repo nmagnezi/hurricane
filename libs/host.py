@@ -1,18 +1,12 @@
 import paramiko
 import logging
 import datetime
+import config.constants as c
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 LOG.addHandler(console)
-
-CREDENTIALS_SECTION = 'credentials'
-INSTALLER_SECTION = 'job_params'
-OS_NAMES_SECTION = 'server_os'
-ENVIRONMENT_SECTION = 'environment'
-
-SSH_TIMEOUT = 3
 
 
 class Host(object):
@@ -21,8 +15,8 @@ class Host(object):
         self.fqdn = fqdn
         self.role = role
         self.hostname = fqdn.split('.')[0]
-        self.username = job_dict[CREDENTIALS_SECTION]['default_user']
-        self.password = job_dict[CREDENTIALS_SECTION]['default_pass']
+        self.username = job_dict[c.CREDENTIALS]['default_user']
+        self.password = job_dict[c.CREDENTIALS]['default_pass']
         self.ssh = paramiko.SSHClient()
         self.host_type, self.ip_address, self.os_name, self.mgmt_interface, \
             self.tenant_interface = self.get_host_info(job_dict)
@@ -41,27 +35,23 @@ class Host(object):
     def get_host_type(self):
         cmd = \
             'grep hypervisor /proc/cpuinfo /dev/null && echo true || echo false'
-        is_virtual, stderr = self.run_bash_command(cmd)
-        if is_virtual == 'false':
-            return 'baremetal'
-        else:
-            return 'vm'
+        is_virtual, _ = self.run_bash_command(cmd)
+        return 'baremetal' if is_virtual == 'false' else 'vm'
 
     def get_host_ip_address(self):
         cmd = 'dig {hostname} +short'.format(hostname=self.fqdn)
-        ip_address, stderr = self.run_bash_command(cmd)
+        ip_address, _ = self.run_bash_command(cmd)
         return ip_address.rstrip()
 
     def get_os_name(self, job_dict):
-        os_str, stderr = self.run_bash_command('cat /etc/system-release')
-        for os_name in job_dict[OS_NAMES_SECTION].keys():
-                if job_dict[OS_NAMES_SECTION][os_name] == \
-                        os_str.strip():
-                    return os_name
+        os_str, _ = self.run_bash_command('cat /etc/system-release')
+        for os_name in job_dict[c.OS_NAMES].keys():
+            if job_dict[c.OS_NAMES][os_name] == os_str.strip():
+                return os_name
 
     def get_mgmt_interface(self):
         cmd = "ip route | awk '/default/ {print $5}'"
-        mgmt_interface, stderr = self.run_bash_command(cmd)
+        mgmt_interface, _ = self.run_bash_command(cmd)
         return mgmt_interface.strip()
 
     def get_tenant_interface(self, job_dict, os_name):
@@ -78,17 +68,17 @@ class Host(object):
                 cmd = "ifconfig | awk '/HWaddr/ {print $1}' | sed -e s/\:\//g"
             else:  # rhel7.0
                 cmd = "ifconfig | awk '/mtu/ {print $1}' | sed -e s/\:\//g"
-            nics_string, stderr = self.run_bash_command(cmd)
+            nics_string, _ = self.run_bash_command(cmd)
             nics_list = nics_string.split('\n')
-            tenant_nic_speed = job_dict[ENVIRONMENT_SECTION]['tenant_nic_speed']
+            tenant_nic_speed = job_dict[c.ENVIRONMENT]['tenant_nic_speed']
             for nic in nics_list:
                 cmd = "ethtool {nic} ".format(nic=nic) + \
                       "| awk '/Speed/ {print $2}'"
-                nic_speed, stderr = self.run_bash_command(cmd)
+                nic_speed, _ = self.run_bash_command(cmd)
 
                 cmd = "ifconfig {nic} | grep inet | grep -v inet6"\
                     .format(nic=nic)
-                nic_has_ip, stderr = self.run_bash_command(cmd)
+                nic_has_ip, _ = self.run_bash_command(cmd)
 
                 if nic_speed == tenant_nic_speed and nic_has_ip == '':
                     return nic
@@ -96,7 +86,7 @@ class Host(object):
     def open_connection(self):
         self.ssh.set_missing_host_key_policy(paramiko.WarningPolicy())
         self.ssh.connect(hostname=self.fqdn, username=self.username,
-                         password=self.password, timeout=SSH_TIMEOUT)
+                         password=self.password, timeout=c.SSH_TIMEOUT)
 
     def close_connection(self):
         self.ssh.close()

@@ -1,5 +1,6 @@
 import logging
 import os
+import config.constants as c
 from ConfigParser import ConfigParser
 
 LOG = logging.getLogger(__name__)
@@ -7,32 +8,24 @@ LOG.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 LOG.addHandler(console)
 
-INSTALLER_CONFIG_FILE_DEFAULT_PATH = '/root'
-INSTALLER_CONFIG_FILE_DIRCTORY = 'hurricane/installer/packstack'
-INSTALLER_CONFIG_FILE_SECTION = 'general'
-JOB_SECTION = 'job_params'
-ENVIRONMENT_SECTION = 'environment'
-
 
 class Packstack(object):
 
     def __init__(self, job_dict):
-        self.packstack_answer_file_name = \
-            job_dict[JOB_SECTION]['installer_conf_file']
-        self.installer_conf_file_tags = \
-            job_dict[JOB_SECTION]['installer_conf_file_tags']
-        self.ext_vlan = job_dict[JOB_SECTION]['ext_vlan']
-        self.ntp_server = job_dict[ENVIRONMENT_SECTION]['default_ntp']
+        self.packstack_answer_file_name = job_dict[c.JOB]['installer_conf_file']
+        self.installer_conf_tags = job_dict[c.JOB]['installer_conf_file_tags']
+        self.ext_vlan = job_dict[c.JOB]['ext_vlan']
+        self.ntp_server = job_dict[c.ENVIRONMENT]['default_ntp']
         self.answer_file_dict = self.build_dict_from_file(
-            os.path.join(INSTALLER_CONFIG_FILE_DIRCTORY,
+            os.path.join(c.INSTALLER_CONFIG_FILE_DIRCTORY,
                          self.packstack_answer_file_name) + '.ini')
 
     def debug_print(self):
         """to be deleted"""
         LOG.info(self.packstack_answer_file_name)
-        LOG.info(self.installer_conf_file_tags)
-        LOG.info(os.path.join(INSTALLER_CONFIG_FILE_DIRCTORY,
-                         self.packstack_answer_file_name) + '.ini')
+        LOG.info(self.installer_conf_tags)
+        LOG.info(os.path.join(c.INSTALLER_CONFIG_FILE_DIRCTORY,
+                              self.packstack_answer_file_name) + '.ini')
         LOG.info(self.answer_file_dict)
 
     def build_dict_from_file(self, conf):
@@ -59,7 +52,7 @@ class Packstack(object):
 
     def get_tagged_value(self, attribute):
         a = attribute.lower()
-        tagged_value = self.answer_file_dict[INSTALLER_CONFIG_FILE_SECTION][a]
+        tagged_value = self.answer_file_dict[c.INSTALLER_SECTION][a]
         return tagged_value[1:-1]
 
     def set_tagged_value(self, host, tag_name, tag_value):
@@ -77,17 +70,14 @@ class Packstack(object):
                          host=controller.fqdn))
 
         # inject template values to answer file
-        for option in \
-                self.answer_file_dict[INSTALLER_CONFIG_FILE_SECTION]\
-                    .keys():
-
+        for option in self.answer_file_dict[c.INSTALLER_SECTION].keys():
             cmd = 'sed -i s/^{option}=.*/{option}="{value}"/g ' \
                   '{packstack_answer_file_name}'\
                   .format(option=option.upper(),
                           value=self.answer_file_dict
-                          [INSTALLER_CONFIG_FILE_SECTION][option],
+                          [c.INSTALLER_SECTION][option],
                           packstack_answer_file_name=
-                          os.path.join(INSTALLER_CONFIG_FILE_DEFAULT_PATH,
+                          os.path.join(c.INSTALLER_CONFIG_FILE_DEFAULT_PATH,
                                        self.packstack_answer_file_name))
 
             controller.run_bash_command(cmd)
@@ -100,8 +90,8 @@ class Packstack(object):
             tags_to_inject[host.role].append(host.ip_address)
 
         # add tagged values to dict
-        if self.installer_conf_file_tags:
-            for tag in self.installer_conf_file_tags.split(", "):
+        if self.installer_conf_tags:
+            for tag in self.installer_conf_tags.split(", "):
                 split_tag = tag.split('/')
                 tag_name = split_tag[0]
                 tag_value = split_tag[1]
