@@ -79,9 +79,10 @@ class Deployer(object):
 
     def config_networker_ext_net_interface(self):
         installer_name = self.job_dict[c.JOB]['openstack_installer']
-        networker_option = installer_name + '_networker'
-        networker_option_name = \
-            self.job_dict[c.CONSTANTS][networker_option]
+        os_ver = self.job_dict[c.JOB]['openstack_version']
+        networker_option = '{ver}_{installer}_networker'\
+                           .format(ver=os_ver.lower(), installer=installer_name)
+        networker_option_name = self.job_dict[c.CONSTANTS][networker_option]
         networker_role_name = \
             self.installer.get_tagged_value(networker_option_name)
         for tmp_host in self.openstack_hosts:
@@ -89,8 +90,12 @@ class Deployer(object):
                 self.configurations.create_sub_interface(tmp_host)
 
     def determine_controller_host(self):
+        """Assumption, controller is where the DB resides"""
+        os_ver = self.job_dict[c.JOB]['openstack_version']
         installer_name = self.job_dict[c.JOB]['openstack_installer']
-        controller_option = installer_name + '_controller'
+        controller_option = '{ver}_{installer}_controller'\
+                            .format(ver=os_ver.lower(),
+                                    installer=installer_name)
         controller_option_name = \
             self.job_dict[c.CONSTANTS][controller_option]
         controller_role_name = \

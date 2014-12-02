@@ -215,7 +215,7 @@ class Configs(object):
         cmd1 = 'echo DEVICE="{name}.{vlan}" > {file_path}'\
                .format(name=host.tenant_interface, vlan=ext_vlan,
                        file_path=interface_file_path)
-        cmd2 = 'echo BOOTPROTO=dhcp >> {file_path}'\
+        cmd2 = 'echo BOOTPROTO=none >> {file_path}'\
                .format(file_path=interface_file_path)
         cmd3 = 'echo ONBOOT=yes >> {file_path}'\
                .format(file_path=interface_file_path)
@@ -273,7 +273,7 @@ class Configs(object):
             octate, stderr = host.run_bash_command(cmd1)
 
             cmd2 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
-                   .format(option='BOOTPROTO', value='static',
+                   .format(option='BOOTPROTO', value='none',
                            file_path=interface_file_path)
             cmd3 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
                    .format(option='ONBOOT', value='yes',
