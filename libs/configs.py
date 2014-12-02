@@ -162,6 +162,12 @@ class Configs(object):
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
 
+    def rhos_release_juno(self, host):
+        self.rhos_release(host)
+        openstack_build = self.job_dict[c.JOB]['openstack_build']
+        cmd1 = 'rhos-release 6 -p {puddle}'.format(puddle=openstack_build)
+        host.run_bash_command(cmd1)
+
     def restart_linux_service(self, host, service_name):
         LOG.info('{time} {fqdn}: restarting {service_name}'
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
