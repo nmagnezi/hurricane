@@ -23,7 +23,6 @@ ENVIRONMENT = 'environment'
 REPO = 'repositories'
 CI = 'ci'
 FOREMAN_PARAMS = 'foreman_params'
-OS_NAMES = 'server_os'
 
 # Packstack
 INSTALLER_SECTION = 'general'

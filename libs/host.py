@@ -1,6 +1,8 @@
 import paramiko
 import logging
 import datetime
+import pprint
+import json
 import config.constants as c
 
 LOG = logging.getLogger(__name__)
@@ -18,69 +20,72 @@ class Host(object):
         self.username = job_dict[c.CREDENTIALS]['default_user']
         self.password = job_dict[c.CREDENTIALS]['default_pass']
         self.ssh = paramiko.SSHClient()
-        self.host_type, self.ip_address, self.os_name, self.mgmt_interface, \
-            self.tenant_interface = self.get_host_info(job_dict)
+        self.host_facts = self.facter2json()
+        self.host_type = self.get_host_type()
+        self.ip_address = self.get_host_ip_address()
+        self.os_name = self.get_os_name()
+        self.mgmt_interface = self.get_mgmt_interface()
+        self.tenant_interface = self.get_tenant_interface(
+            job_dict[c.ENVIRONMENT]['tenant_nic_speed'])
         self.print_host()
 
-    def get_host_info(self, job_dict):
+    def facter2json(self):
         self.open_connection()
-        host_type = self.get_host_type()
-        ip_address = self.get_host_ip_address()
-        os_name = self.get_os_name(job_dict)
-        mgmt_interface = self.get_mgmt_interface()
-        tenant_interface = self.get_tenant_interface(job_dict, os_name)
-        self.close_connection()
-        return host_type, ip_address, os_name, mgmt_interface, tenant_interface
+        self.install_prerequisites()
+        host_facts = self.init_facter()
+        #self.close_connection()
+        return host_facts
+
+    def init_facter(self):
+        cmd = 'facter --json'
+        facter_data, _ = self.run_bash_command(cmd)
+        return json.loads(facter_data)
+
+    def install_prerequisites(self):
+        # TODO: verify prerequisites were successfully installed.
+        cmd = 'yum install -y facter'
+        self.run_bash_command(cmd)
 
     def get_host_type(self):
-        cmd = \
-            'grep hypervisor /proc/cpuinfo /dev/null && echo true || echo false'
-        is_virtual, _ = self.run_bash_command(cmd)
-        return 'baremetal' if is_virtual == 'false' else 'vm'
+        return 'vm' if self.host_facts['is_virtual'] == 'true' else 'baremetal'
 
     def get_host_ip_address(self):
-        cmd = 'dig {hostname} +short'.format(hostname=self.fqdn)
-        ip_address, _ = self.run_bash_command(cmd)
-        return ip_address.rstrip()
+        return self.host_facts['ipaddress'].encode('ascii', 'ignore')
 
-    def get_os_name(self, job_dict):
-        os_str, _ = self.run_bash_command('cat /etc/system-release')
-        for os_name in job_dict[c.OS_NAMES].keys():
-            if job_dict[c.OS_NAMES][os_name] == os_str.strip():
-                return os_name
+    def get_os_name(self):
+        # For some reason the facter names 'RHEL' as 'RedHat'.
+        # This is a workaround to correct it (does not happen in Fedora)
+        name = 'rhel' \
+            if self.host_facts['operatingsystem'] == 'RedHat' \
+            else self.host_facts['operatingsystem'].lower()
+        ver = self.host_facts['operatingsystemrelease']
+        return ('{name}{ver}'.format(name=name, ver=ver)).lower()
 
     def get_mgmt_interface(self):
         cmd = "ip route | awk '/default/ {print $5}'"
         mgmt_interface, _ = self.run_bash_command(cmd)
         return mgmt_interface.strip()
 
-    def get_tenant_interface(self, job_dict, os_name):
+    def get_tenant_interface(self, tenant_nic_speed):
         """
         assumption: on baremetal machines, the tenant nic
         a. has no ip address
         b. link state is UP
         """
-        host_type = self.get_host_type()
-        if host_type == 'vm':
-            return self.get_mgmt_interface()
-        elif host_type == 'baremetal':
-            if os_name == 'rhel6.5':
-                cmd = "ifconfig | awk '/HWaddr/ {print $1}' | sed -e s/\:\//g"
-            else:  # rhel7.0
-                cmd = "ifconfig | awk '/mtu/ {print $1}' | sed -e s/\:\//g"
-            nics_string, _ = self.run_bash_command(cmd)
-            nics_list = nics_string.split('\n')
-            tenant_nic_speed = job_dict[c.ENVIRONMENT]['tenant_nic_speed']
+        if self.host_type == 'vm':
+            return self.mgmt_interface
+        elif self.host_type == 'baremetal':
+            nics_list = self.host_facts['interfaces'].split(',')
+            nics_list.remove('lo')  # remove loopback interface
             for nic in nics_list:
                 cmd = "ethtool {nic} ".format(nic=nic) + \
                       "| awk '/Speed/ {print $2}'"
                 nic_speed, _ = self.run_bash_command(cmd)
-
                 cmd = "ifconfig {nic} | grep inet | grep -v inet6"\
-                    .format(nic=nic)
+                      .format(nic=nic)
                 nic_has_ip, _ = self.run_bash_command(cmd)
-
                 if nic_speed == tenant_nic_speed and nic_has_ip == '':
+                    self.close_connection()
                     return nic
 
     def open_connection(self):
@@ -122,4 +127,4 @@ class Host(object):
         self.close_connection()
 
     def print_host(self):
-        LOG.info(self.__dict__)
+        LOG.info(pprint.pformat(self.__dict__))

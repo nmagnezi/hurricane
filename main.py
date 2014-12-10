@@ -1,4 +1,5 @@
 import logging
+import pprint
 from libs.deployer import Deployer
 from libs.infra import Provisioning
 import libs.utils as utils
@@ -12,7 +13,7 @@ LOG.addHandler(console)
 
 def hurricane():
     job_dict = utils.build_dict_from_file(c.CONFIG_FILE_PATH)
-    print job_dict
+    LOG.info(pprint.pformat(job_dict))
     utils.print_job_dict(job_dict)
 
     # Reprovision Hosts via foreman

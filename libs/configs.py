@@ -165,8 +165,11 @@ class Configs(object):
     def rhos_release_juno(self, host):
         self.rhos_release(host)
         openstack_build = self.job_dict[c.JOB]['openstack_build']
-        cmd1 = 'rhos-release 6 -p {puddle}'.format(puddle=openstack_build)
+        # sadly, there's a need to update the rhos-release package.
+        cmd1 = 'yum update -y rhos-release'
+        cmd2 = 'rhos-release 6 -p {puddle}'.format(puddle=openstack_build)
         host.run_bash_command(cmd1)
+        host.run_bash_command(cmd2)
 
     def restart_linux_service(self, host, service_name):
         LOG.info('{time} {fqdn}: restarting {service_name}'
@@ -215,7 +218,7 @@ class Configs(object):
         cmd1 = 'echo DEVICE="{name}.{vlan}" > {file_path}'\
                .format(name=host.tenant_interface, vlan=ext_vlan,
                        file_path=interface_file_path)
-        cmd2 = 'echo BOOTPROTO=none >> {file_path}'\
+        cmd2 = 'echo BOOTPROTO=dhcp >> {file_path}'\
                .format(file_path=interface_file_path)
         cmd3 = 'echo ONBOOT=yes >> {file_path}'\
                .format(file_path=interface_file_path)
@@ -273,7 +276,7 @@ class Configs(object):
             octate, stderr = host.run_bash_command(cmd1)
 
             cmd2 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
-                   .format(option='BOOTPROTO', value='none',
+                   .format(option='BOOTPROTO', value='dhcp',
                            file_path=interface_file_path)
             cmd3 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
                    .format(option='ONBOOT', value='yes',
