@@ -276,7 +276,7 @@ class Configs(object):
             octate, stderr = host.run_bash_command(cmd1)
 
             cmd2 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
-                   .format(option='BOOTPROTO', value='dhcp',
+                   .format(option='BOOTPROTO', value='static',
                            file_path=interface_file_path)
             cmd3 = 'sed -i s/^{option}=.*/{option}="{value}"/g {file_path}'\
                    .format(option='ONBOOT', value='yes',

@@ -63,7 +63,7 @@ class Packstack(object):
                     answer_file_name=self.packstack_answer_file_name)
         host.run_bash_command(cmd)
 
-    def configure_answer_file(self, controller, openstack_hosts):
+    def configure_answer_file(self, controller, networker, openstack_hosts):
         LOG.info('Configuring packstack answer file {answer_file_name} '
                  'on host {host}'
                  .format(answer_file_name=self.packstack_answer_file_name,
@@ -100,7 +100,7 @@ class Packstack(object):
                 tags_to_inject[tag_name].append(tag_value)
 
         tags_to_inject['tenant_int'] = []
-        tags_to_inject['tenant_int'].append(controller.tenant_interface)
+        tags_to_inject['tenant_int'].append(networker.tenant_interface)
 
         tags_to_inject['ntp_server'] = []
         tags_to_inject['ntp_server'].append(self.ntp_server)
