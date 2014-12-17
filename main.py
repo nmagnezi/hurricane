@@ -50,9 +50,10 @@ def hurricane():
     # OpenStack installation
     if utils.do_exec(main.job_dict[c.JOB]['install_openstack']):
         if main.job_dict[c.JOB]['openstack_installer'] == 'packstack':
-            if utils.do_exec(main.job_dict[c.JOB]['ext_vlan']):
-                main.config_networker_ext_net_interface()
+            #if utils.do_exec(main.job_dict[c.JOB]['ext_vlan']):
+            #    main.config_networker_ext_net_interface()
             controller_host = main.determine_controller_host()
+            networker_host = main.determine_networker_host()
             controller_host.open_connection()
             main.generate_ssh_key(controller_host)
             main.distribute_public_key_to_openstack_hosts(controller_host)
@@ -60,6 +61,7 @@ def hurricane():
                                             'openstack-packstack')
             main.installer.generate_answer_file(controller_host)
             main.installer.configure_answer_file(controller_host,
+                                                 networker_host,
                                                  main.openstack_hosts)
             main.installer.install_openstack(controller_host)
 

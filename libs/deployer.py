@@ -106,6 +106,22 @@ class Deployer(object):
                          .format(fqdn=tmp_host.fqdn))
                 return tmp_host
 
+    def determine_networker_host(self):
+        os_ver = self.job_dict[c.JOB]['openstack_version']
+        installer_name = self.job_dict[c.JOB]['openstack_installer']
+        networker_option = '{ver}_{installer}_networker'\
+                           .format(ver=os_ver.lower(),
+                                   installer=installer_name)
+        networker_option_name = \
+            self.job_dict[c.CONSTANTS][networker_option]
+        networker_role_name = \
+            self.installer.get_tagged_value(networker_option_name)
+        for tmp_host in self.openstack_hosts:
+            if tmp_host.role == networker_role_name:
+                LOG.info('Networker host found: {fqdn}'
+                         .format(fqdn=tmp_host.fqdn))
+                return tmp_host
+
     def generate_ssh_key(self, host):
         cmd = 'yes | ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa'
         host.run_bash_command(cmd)

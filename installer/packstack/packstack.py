@@ -122,7 +122,7 @@ class Packstack(object):
                  'Grab yourself a cup of coffee it will take ~20 minutes'
                  .format(host=host.fqdn))
 
-        cmd = 'packstack --answer-file=/root/{packstack_answer_file_name}'\
+        cmd = 'packstack --answer-file=/root/{packstack_answer_file_name} -d'\
               .format(packstack_answer_file_name=
                       self.packstack_answer_file_name)
 
