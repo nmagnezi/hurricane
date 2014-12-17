@@ -10,8 +10,8 @@ REBOOT_SLEEP = 10
 INSTALLER_CONFIG_FILE_DEFAULT_PATH = '/root'
 INSTALLER_CONFIG_FILE_DIRCTORY = 'installer/packstack/configs'
 CONFIG_FILE_NAME = 'config.ini'
-#CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
-CONFIG_FILE_DIRECTORY = 'config'
+CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
+#CONFIG_FILE_DIRECTORY = 'config'
 CONFIG_FILE_PATH = path.join(CONFIG_FILE_DIRECTORY, CONFIG_FILE_NAME)
 
 # Hurricane Config File Section
