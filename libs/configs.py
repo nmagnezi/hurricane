@@ -242,6 +242,9 @@ class Configs(object):
         host.run_bash_command(cmd8)
 
     def register_to_rhn(self, host):
+        """
+        :param host: the host that will be registered to rhn
+        """
         LOG.info('{time} {fqdn}: registering to rhn'
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
                                                                '%H:%M:%S'),
@@ -313,3 +316,19 @@ class Configs(object):
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
         host.run_bash_command(cmd3)
+
+    def prep_for_robot(self, host):
+        """
+        This function is a preparation for Robot tests.
+        That test system expects to find the answer file at: /root/ANSWER_FILE
+        :param host: a host which holds the packstack answer file
+        """
+        LOG.info('{time} {fqdn}: Changing answer file name to ANSWER_FILE'
+                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
+                                                               '%H:%M:%S'),
+                         fqdn=host.fqdn))
+        answer_file = self.job_dict['job_params']['installer_conf_file']
+        robot_file = 'ANSWER_FILE'
+        cmd = 'mv {answer_file} {robot file}'.format(answer_file=answer_file,
+                                                     robot_file=robot_file)
+        host.run_bash_command(cmd)
