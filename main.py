@@ -64,8 +64,7 @@ def hurricane():
                                                  networker_host,
                                                  main.openstack_hosts)
             main.installer.install_openstack(controller_host)
-            LOG.info('Rebooting All nodes in order due '
-                     'to possible kernel update')
+            LOG.info('Rebooting All nodes in due to possible kernel update')
             provisioner.reboot_hosts(hosts_fqdn)
             provisioner.wait_for_reprovision_to_finish(hosts_fqdn)
 
