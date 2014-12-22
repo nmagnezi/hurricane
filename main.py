@@ -15,12 +15,12 @@ def hurricane():
     job_dict = utils.build_dict_from_file(c.CONFIG_FILE_PATH)
     LOG.info(pprint.pformat(job_dict))
     utils.print_job_dict(job_dict)
+    hosts_fqdn = [i.split('/')[0] for i in
+                  job_dict[c.JOB]['hosts_and_roles'].split(", ")]
+    provisioner = Provisioning(job_dict)
 
     # Reprovision Hosts via foreman
     if utils.do_exec(job_dict[c.JOB]['reprovision']):
-        provisioner = Provisioning(job_dict)
-        hosts_fqdn = [i.split('/')[0] for i in
-                      job_dict[c.JOB]['hosts_and_roles'].split(", ")]
         if utils.do_exec(job_dict[c.JOB]['rebuild_test_client']) and \
            utils.do_exec(job_dict[c.JOB]['run_tests']):
             test_client_fqdn = job_dict[c.JOB]['test_client_fqdn']
@@ -64,14 +64,17 @@ def hurricane():
                                                  networker_host,
                                                  main.openstack_hosts)
             main.installer.install_openstack(controller_host)
+            LOG.info('Rebooting All nodes in order due '
+                     'to possible kernel update')
+            provisioner.reboot_hosts(hosts_fqdn)
+            provisioner.wait_for_reprovision_to_finish(hosts_fqdn)
 
     else:
         LOG.info('OpenStack installation set to false, Skipping...')
-
     # Post installation configurations
     if utils.do_exec(main.job_dict[c.JOB]['post_install_configs']):
         main.config_all_openstack_hosts(
-            main.job_dict[c.JOB]['Post_install_configs'])
+            main.job_dict[c.JOB]['post_install_configs'])
     else:
         LOG.info('Post installation configurations list is empty, Skipping...')
 
