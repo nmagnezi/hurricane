@@ -329,6 +329,6 @@ class Configs(object):
                          fqdn=host.fqdn))
         answer_file = self.job_dict['job_params']['installer_conf_file']
         robot_file = 'ANSWER_FILE'
-        cmd = 'mv {answer_file} {robot file}'.format(answer_file=answer_file,
+        cmd = 'mv {answer_file} {robot_file}'.format(answer_file=answer_file,
                                                      robot_file=robot_file)
         host.run_bash_command(cmd)
