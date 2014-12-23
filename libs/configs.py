@@ -119,6 +119,7 @@ class Configs(object):
     def rhos_release(self, host):
         rpm_url = self.job_dict[c.CI]['rhos-release']
         self.install_rpm(host, rpm_url)
+        self.remove_all_yum_repos(host)
 
     def rhos_release_grizzly(self, host):
         self.rhos_release(host)
