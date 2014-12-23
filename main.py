@@ -25,7 +25,7 @@ def hurricane():
            utils.do_exec(job_dict[c.JOB]['run_tests']):
             test_client_fqdn = job_dict[c.JOB]['test_client_fqdn']
             hosts_fqdn.append(test_client_fqdn)
-        provisioner.provision_hosts(hosts_fqdn)
+        provisioner.provision_hosts(list(set(hosts_fqdn)))
     else:
         LOG.info('Reprovisioning disabled, Skipping...')
 
@@ -50,8 +50,6 @@ def hurricane():
     # OpenStack installation
     if utils.do_exec(main.job_dict[c.JOB]['install_openstack']):
         if main.job_dict[c.JOB]['openstack_installer'] == 'packstack':
-            #if utils.do_exec(main.job_dict[c.JOB]['ext_vlan']):
-            #    main.config_networker_ext_net_interface()
             controller_host = main.determine_controller_host()
             networker_host = main.determine_networker_host()
             controller_host.open_connection()
@@ -65,8 +63,8 @@ def hurricane():
                                                  main.openstack_hosts)
             main.installer.install_openstack(controller_host)
             LOG.info('Rebooting All nodes in due to possible kernel update')
-            provisioner.reboot_hosts(hosts_fqdn)
-            provisioner.wait_for_reprovision_to_finish(hosts_fqdn)
+            provisioner.reboot_hosts(list(set(hosts_fqdn)))
+            provisioner.wait_for_reprovision_to_finish(list(set(hosts_fqdn)))
 
     else:
         LOG.info('OpenStack installation set to false, Skipping...')
