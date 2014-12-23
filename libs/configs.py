@@ -162,12 +162,30 @@ class Configs(object):
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
 
+    def rhos_release_icehouse_adv(self, host):
+        self.rhos_release(host)
+        openstack_build = self.job_dict[c.JOB]['openstack_build']
+        # sadly, there's a need to update the rhos-release package.
+        cmd1 = 'yum update -y rhos-release'
+        cmd2 = 'rhos-release 5a -p {puddle}'.format(puddle=openstack_build)
+        host.run_bash_command(cmd1)
+        host.run_bash_command(cmd2)
+
     def rhos_release_juno(self, host):
         self.rhos_release(host)
         openstack_build = self.job_dict[c.JOB]['openstack_build']
         # sadly, there's a need to update the rhos-release package.
         cmd1 = 'yum update -y rhos-release'
         cmd2 = 'rhos-release 6 -p {puddle}'.format(puddle=openstack_build)
+        host.run_bash_command(cmd1)
+        host.run_bash_command(cmd2)
+
+    def rhos_release_juno_adv(self, host):
+        self.rhos_release(host)
+        openstack_build = self.job_dict[c.JOB]['openstack_build']
+        # sadly, there's a need to update the rhos-release package.
+        cmd1 = 'yum update -y rhos-release'
+        cmd2 = 'rhos-release 6a -p {puddle}'.format(puddle=openstack_build)
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
 
