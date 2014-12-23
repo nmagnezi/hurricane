@@ -220,45 +220,47 @@ class Configs(object):
         self.ovs_add_port_to_br(host, 'br-ex', host.tenant_interface)
 
     def create_sub_interface(self, host):
-        # TODO: do that only for netwoker nodes
-        ext_vlan = self.job_dict[c.JOB]['ext_vlan']
-        interface_file_name = 'ifcfg-{name}.{vlan}'\
-                              .format(name=host.tenant_interface, vlan=ext_vlan)
-        interface_file_location = '/etc/sysconfig/network-scripts'
-        interface_file_path = os.path.join(interface_file_location,
-                                           interface_file_name)
+        if not host.host_type == 'vm':
+            ext_vlan = self.job_dict[c.JOB]['ext_vlan']
+            interface_file_name = 'ifcfg-{name}.{vlan}'\
+                                  .format(name=host.tenant_interface,
+                                          vlan=ext_vlan)
+            interface_file_location = '/etc/sysconfig/network-scripts'
+            interface_file_path = os.path.join(interface_file_location,
+                                               interface_file_name)
 
-        LOG.info('{time} {fqdn}: Creating sub interface: {interface_file_name}'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn,
-                         interface_file_name=interface_file_name))
+            LOG.info('{time} {fqdn}: Creating sub interface: '
+                     '{interface_file_name}'
+                     .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
+                                                                   '%H:%M:%S'),
+                             fqdn=host.fqdn,
+                             interface_file_name=interface_file_name))
 
-        cmd1 = 'echo DEVICE="{name}.{vlan}" > {file_path}'\
-               .format(name=host.tenant_interface, vlan=ext_vlan,
-                       file_path=interface_file_path)
-        cmd2 = 'echo BOOTPROTO=dhcp >> {file_path}'\
-               .format(file_path=interface_file_path)
-        cmd3 = 'echo ONBOOT=yes >> {file_path}'\
-               .format(file_path=interface_file_path)
-        cmd4 = 'echo USERCTL=no >> {file_path}'\
-               .format(file_path=interface_file_path)
-        cmd5 = 'echo VLAN=yes >> {file_path}'\
-               .format(file_path=interface_file_path)
-        cmd6 = 'echo NM_CONTROLLED=no >> {file_path}'\
-               .format(file_path=interface_file_path)
-        cmd7 = 'ifdown {interface_file_name}'\
-               .format(interface_file_name=interface_file_name)
-        cmd8 = 'ifup {interface_file_name}'\
-               .format(interface_file_name=interface_file_name)
-        host.run_bash_command(cmd1)
-        host.run_bash_command(cmd2)
-        host.run_bash_command(cmd3)
-        host.run_bash_command(cmd4)
-        host.run_bash_command(cmd5)
-        host.run_bash_command(cmd6)
-        host.run_bash_command(cmd7)
-        host.run_bash_command(cmd8)
+            cmd1 = 'echo DEVICE="{name}.{vlan}" > {file_path}'\
+                   .format(name=host.tenant_interface, vlan=ext_vlan,
+                           file_path=interface_file_path)
+            cmd2 = 'echo BOOTPROTO=dhcp >> {file_path}'\
+                   .format(file_path=interface_file_path)
+            cmd3 = 'echo ONBOOT=yes >> {file_path}'\
+                   .format(file_path=interface_file_path)
+            cmd4 = 'echo USERCTL=no >> {file_path}'\
+                   .format(file_path=interface_file_path)
+            cmd5 = 'echo VLAN=yes >> {file_path}'\
+                   .format(file_path=interface_file_path)
+            cmd6 = 'echo NM_CONTROLLED=no >> {file_path}'\
+                   .format(file_path=interface_file_path)
+            cmd7 = 'ifdown {interface_file_name}'\
+                   .format(interface_file_name=interface_file_name)
+            cmd8 = 'ifup {interface_file_name}'\
+                   .format(interface_file_name=interface_file_name)
+            host.run_bash_command(cmd1)
+            host.run_bash_command(cmd2)
+            host.run_bash_command(cmd3)
+            host.run_bash_command(cmd4)
+            host.run_bash_command(cmd5)
+            host.run_bash_command(cmd6)
+            host.run_bash_command(cmd7)
+            host.run_bash_command(cmd8)
 
     def register_to_rhn(self, host):
         """
