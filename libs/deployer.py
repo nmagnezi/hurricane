@@ -26,7 +26,7 @@ class Deployer(object):
         password = self.job_dict[c.CREDENTIALS]['default_pass']
         hosts_and_roles = self.job_dict[c.JOB]['hosts_and_roles']
         hosts_fqdn = [i.split('/')[0] for i in hosts_and_roles.split(", ")]
-        for host_fqdn in hosts_fqdn:
+        for host_fqdn in list(set(hosts_fqdn)):
             LOG.info('Checking {fqdn} availability via SSH'
                      .format(fqdn=host_fqdn))
             ssh = paramiko.SSHClient()
@@ -55,7 +55,6 @@ class Deployer(object):
     def build_hosts_list(self):
         hosts_and_roles = self.job_dict[c.JOB]['hosts_and_roles']
         openstack_hosts = []
-
         for host_and_role in hosts_and_roles.split(", "):
             host_and_role_split = host_and_role.split('/')
             host_fqdn = host_and_role_split[0]
