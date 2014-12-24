@@ -1,5 +1,9 @@
+#!/usr/bin/python
+
 import logging
 import pprint
+from sys import argv
+from os import path
 from libs.deployer import Deployer
 from libs.infra import Provisioning
 import libs.utils as utils
@@ -11,8 +15,9 @@ console = logging.StreamHandler()
 LOG.addHandler(console)
 
 
-def hurricane():
-    job_dict = utils.build_dict_from_file(c.CONFIG_FILE_PATH)
+def hurricane(config_file):
+    job_dict = utils.build_dict_from_file(path.join(c.CONFIG_FILE_DIRECTORY,
+                                                    config_file))
     LOG.info(pprint.pformat(job_dict))
     utils.print_job_dict(job_dict)
     hosts_fqdn = [i.split('/')[0] for i in
@@ -83,4 +88,4 @@ def hurricane():
 
 
 if __name__ == '__main__':
-    hurricane()
+    hurricane(str(argv[1]))
