@@ -1,5 +1,3 @@
-from os import path
-
 # SSH Intervals
 RECONNECTION_ATTEMPTS = 1200
 RECONNECTION_INTERVAL = 30
@@ -26,4 +24,3 @@ FOREMAN_PARAMS = 'foreman_params'
 
 # Packstack
 INSTALLER_SECTION = 'general'
-
