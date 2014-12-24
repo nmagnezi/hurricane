@@ -168,7 +168,7 @@ class Configs(object):
 
     def rhos_release_icehouse_adv(self, host):
         self.rhos_release(host)
-        openstack_build = self.job_dict[c.JOB]['openstack_build']'
+        openstack_build = self.job_dict[c.JOB]['openstack_build']
         cmd = 'rhos-release 5a -p {puddle}'.format(puddle=openstack_build)
         host.run_bash_command(cmd)
 
