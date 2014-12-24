@@ -152,7 +152,7 @@ class Configs(object):
         operating_system = self.job_dict[c.JOB]['operating_system']
 
         cmd1 = 'rhos-release 5'
-        if operating_system == 'rhel6.5':
+        if 'rhel6' in operating_system:
             cmd2 = 'sed -i ' \
                    's/"latest\/\RH6-RHOS-5.0"/"{puddle}\/\RH6-RHOS-5.0"/g ' \
                    '/etc/yum.repos.d/rhos-release*'\
