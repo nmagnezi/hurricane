@@ -1,9 +1,6 @@
-#!/usr/bin/python
-
 import logging
 import pprint
-from sys import argv
-from os import path
+import os
 from libs.deployer import Deployer
 from libs.infra import Provisioning
 import libs.utils as utils
@@ -15,9 +12,12 @@ console = logging.StreamHandler()
 LOG.addHandler(console)
 
 
-def hurricane(config_file):
-    job_dict = utils.build_dict_from_file(path.join(c.CONFIG_FILE_DIRECTORY,
-                                                    config_file))
+def hurricane():
+    config_env_var = '{prefix}{suffix}'.format(prefix=c.ENV_VARIABLE_PREFIX,
+                                               suffix='JOB_CONF_FILE')
+    config_file = os.environ.get(config_env_var, 'config.ini')
+    job_dict = utils.build_dict_from_file(os.path.join(c.CONFIG_FILE_DIRECTORY,
+                                                       config_file))
     LOG.info(pprint.pformat(job_dict))
     utils.print_job_dict(job_dict)
     hosts_fqdn = [i.split('/')[0] for i in
@@ -88,4 +88,4 @@ def hurricane(config_file):
 
 
 if __name__ == '__main__':
-    hurricane(str(argv[1]))
+    hurricane()
