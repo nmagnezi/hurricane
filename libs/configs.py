@@ -229,12 +229,12 @@ class Configs(object):
                                                                    '%H:%M:%S'),
                              fqdn=host.fqdn,
                              interface_file_name=interface_file_name))
-
+            bootproto = 'none' if 'rhel7' in host.os_name else 'dhcp'
             cmd1 = 'echo DEVICE="{name}.{vlan}" > {file_path}'\
                    .format(name=host.tenant_interface, vlan=ext_vlan,
                            file_path=interface_file_path)
-            cmd2 = 'echo BOOTPROTO=dhcp >> {file_path}'\
-                   .format(file_path=interface_file_path)
+            cmd2 = 'echo BOOTPROTO={bootproto} >> {file_path}'\
+                   .format(file_path=interface_file_path, bootproto=bootproto)
             cmd3 = 'echo ONBOOT=yes >> {file_path}'\
                    .format(file_path=interface_file_path)
             cmd4 = 'echo USERCTL=no >> {file_path}'\
