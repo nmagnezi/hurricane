@@ -95,10 +95,17 @@ class Deployer(object):
         controller_option = '{ver}_{installer}_controller'\
                             .format(ver=os_ver.lower(),
                                     installer=installer_name)
-        controller_option_name = \
-            self.job_dict[c.CONSTANTS][controller_option]
+        controller_option_name = self.job_dict[c.CONSTANTS][controller_option]
         controller_role_name = \
             self.installer.get_tagged_value(controller_option_name)
+        LOG.info('Params Detected: openstack version: {os_ver},'
+                 'installer name: {installer_name},'
+                 'controller option: {controller_option}'
+                 'controller option name: {controller_option_name}'
+                 .format(os_ver=os_ver,
+                         installer_name=installer_name,
+                         controller_option=controller_option,
+                         controller_option_name=controller_option_name))
         for tmp_host in self.openstack_hosts:
             if tmp_host.role == controller_role_name:
                 LOG.info('Controller host found: {fqdn}'
@@ -115,6 +122,14 @@ class Deployer(object):
             self.job_dict[c.CONSTANTS][networker_option]
         networker_role_name = \
             self.installer.get_tagged_value(networker_option_name)
+        LOG.info('Params Detected: openstack version: {os_ver},'
+                 'installer name: {installer_name},'
+                 'networker option: {networker_option}'
+                 'networker option name: {networker_option_name}'
+                 .format(os_ver=os_ver,
+                         installer_name=installer_name,
+                         networker_option=networker_option,
+                         networker_option_name=networker_option_name))
         for tmp_host in self.openstack_hosts:
             if tmp_host.role == networker_role_name:
                 LOG.info('Networker host found: {fqdn}'
