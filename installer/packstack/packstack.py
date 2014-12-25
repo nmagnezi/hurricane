@@ -72,12 +72,11 @@ class Packstack(object):
         # inject template values to answer file
         for option in self.answer_file_dict[c.INSTALLER_SECTION].keys():
             cmd = 'sed -i s/^{option}=.*/{option}="{value}"/g ' \
-                  '{packstack_answer_file_name}'\
+                  '{answer_file_name}'\
                   .format(option=option.upper(),
                           value=self.answer_file_dict
                           [c.INSTALLER_SECTION][option],
-                          packstack_answer_file_name=
-                          os.path.join(c.INSTALLER_CONFIG_FILE_DEFAULT_PATH,
+                          answer_file_name=os.path.join(c.INSTALLER_CONFIG_FILE_DEFAULT_PATH,
                                        self.answer_file_name))
 
             controller.run_bash_command(cmd)
@@ -122,8 +121,8 @@ class Packstack(object):
                  'Grab yourself a cup of coffee it will take ~20 minutes'
                  .format(host=host.fqdn))
         cmd1 = 'grep "CONFIG_" {answer_file_name}  | grep -v "#"'\
-               .format(packstack_answer_file_name=self.answer_file_name)
+               .format(answer_file_name=self.answer_file_name)
         cmd2 = 'packstack --answer-file=/root/{answer_file_name} -d'\
-               .format(packstack_answer_file_name=self.answer_file_name)
+               .format(answer_file_name=self.answer_file_name)
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
