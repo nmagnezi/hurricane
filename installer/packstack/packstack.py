@@ -12,20 +12,20 @@ LOG.addHandler(console)
 class Packstack(object):
 
     def __init__(self, job_dict):
-        self.packstack_answer_file_name = job_dict[c.JOB]['installer_conf_file']
+        self.answer_file_name = job_dict[c.JOB]['installer_conf_file']
         self.installer_conf_tags = job_dict[c.JOB]['installer_conf_file_tags']
         self.ext_vlan = job_dict[c.JOB]['ext_vlan']
         self.ntp_server = job_dict[c.ENVIRONMENT]['default_ntp']
         self.answer_file_dict = self.build_dict_from_file(
             os.path.join(c.INSTALLER_CONFIG_FILE_DIRCTORY,
-                         self.packstack_answer_file_name) + '.ini')
+                         self.answer_file_name) + '.ini')
 
     def debug_print(self):
         """to be deleted"""
-        LOG.info(self.packstack_answer_file_name)
+        LOG.info(self.answer_file_name)
         LOG.info(self.installer_conf_tags)
         LOG.info(os.path.join(c.INSTALLER_CONFIG_FILE_DIRCTORY,
-                              self.packstack_answer_file_name) + '.ini')
+                              self.answer_file_name) + '.ini')
         LOG.info(self.answer_file_dict)
 
     def build_dict_from_file(self, conf):
@@ -41,13 +41,13 @@ class Packstack(object):
 
     def generate_answer_file(self, host):
         cmd = 'packstack --gen-answer-file={answer_file_name}'\
-              .format(answer_file_name=self.packstack_answer_file_name)
+              .format(answer_file_name=self.answer_file_name)
 
         host.run_bash_command(cmd)
 
         LOG.info('Generating packstack answer file {answer_file_name} '
                  'on host {host}'
-                 .format(answer_file_name=self.packstack_answer_file_name,
+                 .format(answer_file_name=self.answer_file_name,
                          host=host.fqdn))
 
     def get_tagged_value(self, attribute):
@@ -60,13 +60,13 @@ class Packstack(object):
                        '/root/{answer_file_name}'\
             .format(tag_name=tag_name,
                     tag_value=tag_value,
-                    answer_file_name=self.packstack_answer_file_name)
+                    answer_file_name=self.answer_file_name)
         host.run_bash_command(cmd)
 
     def configure_answer_file(self, controller, networker, openstack_hosts):
         LOG.info('Configuring packstack answer file {answer_file_name} '
                  'on host {host}'
-                 .format(answer_file_name=self.packstack_answer_file_name,
+                 .format(answer_file_name=self.answer_file_name,
                          host=controller.fqdn))
 
         # inject template values to answer file
@@ -78,7 +78,7 @@ class Packstack(object):
                           [c.INSTALLER_SECTION][option],
                           packstack_answer_file_name=
                           os.path.join(c.INSTALLER_CONFIG_FILE_DEFAULT_PATH,
-                                       self.packstack_answer_file_name))
+                                       self.answer_file_name))
 
             controller.run_bash_command(cmd)
 
@@ -121,9 +121,9 @@ class Packstack(object):
         LOG.info('running packstack on {host}. '
                  'Grab yourself a cup of coffee it will take ~20 minutes'
                  .format(host=host.fqdn))
-
-        cmd = 'packstack --answer-file=/root/{packstack_answer_file_name} -d'\
-              .format(packstack_answer_file_name=
-                      self.packstack_answer_file_name)
-
-        host.run_bash_command(cmd)
+        cmd1 = 'grep "CONFIG_" {answer_file_name}  | grep -v "#"'\
+               .format(packstack_answer_file_name=self.answer_file_name)
+        cmd2 = 'packstack --answer-file=/root/{answer_file_name} -d'\
+               .format(packstack_answer_file_name=self.answer_file_name)
+        host.run_bash_command(cmd1)
+        host.run_bash_command(cmd2)
