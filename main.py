@@ -1,6 +1,7 @@
 import logging
 import pprint
 import os
+from time import sleep
 from libs.deployer import Deployer
 from libs.infra import Provisioning
 import libs.utils as utils
@@ -69,6 +70,7 @@ def hurricane():
             main.installer.install_openstack(controller_host)
             LOG.info('Rebooting All nodes in due to possible kernel update')
             provisioner.reboot_hosts(list(set(hosts_fqdn)))
+            sleep(c.REBOOT_SLEEP)  # allows host to gracefully reboot
             provisioner.wait_for_reprovision_to_finish(list(set(hosts_fqdn)))
 
     else:
