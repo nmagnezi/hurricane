@@ -118,12 +118,12 @@ class Packstack(object):
                                   ", ".join(tags_to_inject[tag]))
 
     def install_openstack(self, host):
-        LOG.info('running packstack on {host}. '
-                 'Grab yourself a cup of coffee it will take ~20 minutes'
-                 .format(host=host.fqdn))
         cmd1 = 'grep "CONFIG_" {answer_file_name}  | grep -v "#"'\
                .format(answer_file_name=self.packstack_answer_file_name)
         cmd2 = 'packstack --answer-file=/root/{answer_file_name} -d'\
                .format(answer_file_name=self.packstack_answer_file_name)
         host.run_bash_command(cmd1)
+        LOG.info('running packstack on {host}. '
+                 'Grab yourself a cup of coffee it will take ~20 minutes'
+                 .format(host=host.fqdn))
         host.run_bash_command(cmd2)
