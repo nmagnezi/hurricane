@@ -226,8 +226,8 @@ class Configs(object):
         ext_vlan = self.job_dict[c.JOB]['ext_vlan']
         if not host.host_type == 'vm':
             ext_vlan_range = ext_vlan.split(':')
-            sub_interfaces = list(range(int(ext_vlan_range[0]),
-                                        int(ext_vlan_range[-1])+1))
+            sub_interfaces = list(xrange(int(ext_vlan_range[0]),
+                                         int(ext_vlan_range[-1])+1))
             for sub_interface in sub_interfaces:
                 interface_file_name = 'ifcfg-{name}.{vlan}'\
                                       .format(name=host.tenant_interface,
