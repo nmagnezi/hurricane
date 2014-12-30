@@ -214,47 +214,60 @@ class Configs(object):
         self.ovs_add_port_to_br(host, 'br-ex', host.tenant_interface)
 
     def create_sub_interface(self, host):
+        """
+        this function will read the vlan range from config file at the following
+        format: 'x:y' where the x is that start and the y is the end of that
+        range.
+        it will create a sub interface for each vlan in the given range.
+        the function does support a single vlan as follows (example): '100:100'
+        :param host: the host that will be added with sub interfaces
+        :return: nothing
+        """
+        ext_vlan = self.job_dict[c.JOB]['ext_vlan']
         if not host.host_type == 'vm':
-            ext_vlan = self.job_dict[c.JOB]['ext_vlan']
-            interface_file_name = 'ifcfg-{name}.{vlan}'\
-                                  .format(name=host.tenant_interface,
-                                          vlan=ext_vlan)
-            interface_file_location = '/etc/sysconfig/network-scripts'
-            interface_file_path = os.path.join(interface_file_location,
-                                               interface_file_name)
-
-            LOG.info('{time} {fqdn}: Creating sub interface: '
-                     '{interface_file_name}'
-                     .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                                   '%H:%M:%S'),
-                             fqdn=host.fqdn,
-                             interface_file_name=interface_file_name))
-            bootproto = 'none' if 'rhel7' in host.os_name else 'dhcp'
-            cmd1 = 'echo DEVICE="{name}.{vlan}" > {file_path}'\
-                   .format(name=host.tenant_interface, vlan=ext_vlan,
-                           file_path=interface_file_path)
-            cmd2 = 'echo BOOTPROTO={bootproto} >> {file_path}'\
-                   .format(file_path=interface_file_path, bootproto=bootproto)
-            cmd3 = 'echo ONBOOT=yes >> {file_path}'\
-                   .format(file_path=interface_file_path)
-            cmd4 = 'echo USERCTL=no >> {file_path}'\
-                   .format(file_path=interface_file_path)
-            cmd5 = 'echo VLAN=yes >> {file_path}'\
-                   .format(file_path=interface_file_path)
-            cmd6 = 'echo NM_CONTROLLED=no >> {file_path}'\
-                   .format(file_path=interface_file_path)
-            cmd7 = 'ifdown {interface_file_name}'\
-                   .format(interface_file_name=interface_file_name)
-            cmd8 = 'ifup {interface_file_name}'\
-                   .format(interface_file_name=interface_file_name)
-            host.run_bash_command(cmd1)
-            host.run_bash_command(cmd2)
-            host.run_bash_command(cmd3)
-            host.run_bash_command(cmd4)
-            host.run_bash_command(cmd5)
-            host.run_bash_command(cmd6)
-            host.run_bash_command(cmd7)
-            host.run_bash_command(cmd8)
+            ext_vlan_range = ext_vlan.split(':')
+            sub_interfaces = list(range(int(ext_vlan_range[0]),
+                                        int(ext_vlan_range[-1])+1))
+            for sub_interface in sub_interfaces:
+                interface_file_name = 'ifcfg-{name}.{vlan}'\
+                                      .format(name=host.tenant_interface,
+                                              vlan=sub_interface)
+                interface_file_location = '/etc/sysconfig/network-scripts'
+                interface_file_path = os.path.join(interface_file_location,
+                                                   interface_file_name)
+                timstamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                LOG.info('{time} {fqdn}: Creating sub interface: '
+                         '{interface_file_name}'
+                         .format(time=timstamp,
+                                 fqdn=host.fqdn,
+                                 interface_file_name=interface_file_name))
+                bootproto = 'none' if 'rhel7' in host.os_name else 'dhcp'
+                cmd1 = 'echo DEVICE="{name}.{vlan}" > {file_path}'\
+                       .format(name=host.tenant_interface, vlan=sub_interface,
+                               file_path=interface_file_path)
+                cmd2 = 'echo BOOTPROTO={bootproto} >> {file_path}'\
+                       .format(file_path=interface_file_path,
+                               bootproto=bootproto)
+                cmd3 = 'echo ONBOOT=yes >> {file_path}'\
+                       .format(file_path=interface_file_path)
+                cmd4 = 'echo USERCTL=no >> {file_path}'\
+                       .format(file_path=interface_file_path)
+                cmd5 = 'echo VLAN=yes >> {file_path}'\
+                       .format(file_path=interface_file_path)
+                cmd6 = 'echo NM_CONTROLLED=no >> {file_path}'\
+                       .format(file_path=interface_file_path)
+                cmd7 = 'ifdown {interface_file_name}'\
+                       .format(interface_file_name=interface_file_name)
+                cmd8 = 'ifup {interface_file_name}'\
+                       .format(interface_file_name=interface_file_name)
+                host.run_bash_command(cmd1)
+                host.run_bash_command(cmd2)
+                host.run_bash_command(cmd3)
+                host.run_bash_command(cmd4)
+                host.run_bash_command(cmd5)
+                host.run_bash_command(cmd6)
+                host.run_bash_command(cmd7)
+                host.run_bash_command(cmd8)
 
     def register_to_rhn(self, host):
         """
