@@ -2,7 +2,7 @@ import paramiko
 import logging
 import datetime
 import pprint
-import json
+import yaml
 import config.constants as c
 
 LOG = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class Host(object):
         self.username = job_dict[c.CREDENTIALS]['default_user']
         self.password = job_dict[c.CREDENTIALS]['default_pass']
         self.ssh = paramiko.SSHClient()
-        self.host_facts = self.facter2json()
+        self.host_facts = self.facter2yaml()
         self.host_type = self.get_host_type()
         self.ip_address = self.get_host_ip_address()
         self.os_name = self.get_os_name()
@@ -29,7 +29,7 @@ class Host(object):
             job_dict[c.ENVIRONMENT]['tenant_nic_speed'])
         self.print_host()
 
-    def facter2json(self):
+    def facter2yaml(self):
         self.open_connection()
         self.install_prerequisites()
         host_facts = self.init_facter()
@@ -37,9 +37,9 @@ class Host(object):
         return host_facts
 
     def init_facter(self):
-        cmd = 'facter --json'
+        cmd = 'facter --yaml'
         facter_data, _ = self.run_bash_command(cmd)
-        return json.loads(facter_data)
+        return yaml.safe_load(facter_data)
 
     def install_prerequisites(self):
         # TODO: verify prerequisites were successfully installed.
