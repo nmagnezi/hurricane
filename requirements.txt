@@ -1,3 +1,4 @@
 paramiko>=1.15.1
 pycrypto>=2.6.1
 ecdsa>=0.11
+bunch>=1.0.1
