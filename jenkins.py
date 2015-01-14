@@ -1,6 +1,7 @@
-import os
-import logging
 from ConfigParser import ConfigParser
+import logging
+import os
+
 
 """
 This script will configure the given config file section
