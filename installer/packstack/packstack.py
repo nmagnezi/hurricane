@@ -1,7 +1,8 @@
 import logging
 import os
-import config.constants as c
-from ConfigParser import ConfigParser
+
+from config import consts
+from libs import utils
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -11,33 +12,19 @@ LOG.addHandler(console)
 
 class Packstack(object):
 
-    def __init__(self, job_dict):
-        self.packstack_answer_file_name = job_dict[c.JOB]['installer_conf_file']
-        self.installer_conf_tags = job_dict[c.JOB]['installer_conf_file_tags']
-        self.ext_vlan = job_dict[c.JOB]['ext_vlan']
-        self.ntp_server = job_dict[c.ENVIRONMENT]['default_ntp']
-        self.answer_file_dict = self.build_dict_from_file(
-            os.path.join(c.INSTALLER_CONFIG_FILE_DIRCTORY,
-                         self.packstack_answer_file_name) + '.ini')
+    def __init__(self, conf):
+        self.packstack_answer_file_name = conf.job_params.installer_conf_file
+        self.installer_conf_tags = conf.job_params.installer_conf_file_tags
+        self.ext_vlan = conf.job_params.ext_vlan
+        self.ntp_server = conf.environment.default_ntp
+        self.answer_file = utils.file2bunch(self.get_file_path())
 
-    def debug_print(self):
-        """to be deleted"""
-        LOG.info(self.packstack_answer_file_name)
-        LOG.info(self.installer_conf_tags)
-        LOG.info(os.path.join(c.INSTALLER_CONFIG_FILE_DIRCTORY,
-                              self.packstack_answer_file_name) + '.ini')
-        LOG.info(self.answer_file_dict)
-
-    def build_dict_from_file(self, conf):
-        # TODO: add check that file exists - conf
-        config_file = ConfigParser()
-        config_file.read(conf)
-        file_dict = {}
-        for section in config_file.sections():
-            file_dict[section] = {}
-            for option in config_file.options(section):
-                file_dict[section][option] = config_file.get(section, option)
-        return file_dict
+    def get_file_path(self):
+        path = os.path.join(consts.Paths.INSTALLER_CONFIG_FILE_DIRCTORY,
+                            self.packstack_answer_file_name)
+        file_path = '{path}{suffix}'.format(path=path,
+                                            suffix=consts.Names.ANS_FILE_SUFFIX)
+        return file_path
 
     def generate_answer_file(self, host):
         cmd = 'packstack --gen-answer-file={answer_file_name}'\
@@ -52,7 +39,7 @@ class Packstack(object):
 
     def get_tagged_value(self, attribute):
         a = attribute.lower()
-        tagged_value = self.answer_file_dict[c.INSTALLER_SECTION][a]
+        tagged_value = self.answer_file.general[a]
         return tagged_value[1:-1]
 
     def set_tagged_value(self, host, tag_name, tag_value):
@@ -70,15 +57,15 @@ class Packstack(object):
                          host=controller.fqdn))
 
         # inject template values to answer file
-        for option in self.answer_file_dict[c.INSTALLER_SECTION].keys():
+        for option in self.answer_file.general.keys():
             cmd = 'sed -i s/^{option}=.*/{option}="{value}"/g ' \
                   '{packstack_answer_file_name}'\
                   .format(option=option.upper(),
-                          value=self.answer_file_dict
-                          [c.INSTALLER_SECTION][option],
+                          value=self.answer_file.general[option],
                           packstack_answer_file_name=
-                          os.path.join(c.INSTALLER_CONFIG_FILE_DEFAULT_PATH,
-                                       self.packstack_answer_file_name))
+                          os.path.join(
+                              consts.Paths.INSTALLER_CONFIG_FILE_DEFAULT_PATH,
+                              self.packstack_answer_file_name))
 
             controller.run_bash_command(cmd)
 

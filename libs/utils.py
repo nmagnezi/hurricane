@@ -1,6 +1,8 @@
-import logging
 from ConfigParser import ConfigParser
-import config.constants as c
+import logging
+
+import bunch
+
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -10,23 +12,16 @@ LOG.addHandler(console)
 # Helper functions
 
 
-def build_dict_from_file(conf):
+def file2bunch(conf):
     config_file = ConfigParser()
     config_file.read(conf)
-    file_dict = {}
+    conf_dict = {}
     for section in config_file.sections():
-        file_dict[section] = {}
+        conf_dict[section] = {}
         for option in config_file.options(section):
-            file_dict[section][option] = config_file.get(section, option)
-    return file_dict
-
-
-def print_job_dict(job_dict):
-    LOG.info('Job Variables:')
-    LOG.info('[{section}]'.format(section=c.JOB))
-    for option in job_dict[c.JOB]:
-        LOG.info('{option}: {value}'
-                 .format(option=option, value=job_dict[c.JOB][option]))
+            conf_dict[section][option] = config_file.get(section, option)
+    conf = bunch.bunchify(conf_dict)
+    return conf
 
 
 def do_exec(value):

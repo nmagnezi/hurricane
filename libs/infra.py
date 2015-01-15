@@ -1,8 +1,9 @@
-import paramiko
 import json
 import logging
-import config.constants as c
+import paramiko
 from time import sleep
+
+from config import consts
 
 
 LOG = logging.getLogger(__name__)
@@ -13,27 +14,32 @@ LOG.addHandler(console)
 
 class Provisioning(object):
 
-    def __init__(self, job_dict):
-        self.foreman_user = job_dict[c.CREDENTIALS]['foreman_user']
-        self.foreman_pass = job_dict[c.CREDENTIALS]['foreman_pass']
-        self.test_server_user = job_dict[c.CREDENTIALS]['default_user']
-        self.test_server_pass = job_dict[c.CREDENTIALS]['default_pass']
-        self.foreman_url = job_dict[c.ENVIRONMENT]['foreman_url']
-        self.test_server = job_dict[c.ENVIRONMENT]['test_server']
-        self.operating_system = job_dict[c.JOB]['operating_system']
-        self.host_user = job_dict[c.CREDENTIALS]['default_user']
-        self.host_pass = job_dict[c.CREDENTIALS]['default_pass']
-        self.foreman_params = \
-            (job_dict[c.FOREMAN_PARAMS][self.operating_system.lower()]).split()
+    def __init__(self, conf):
+        self.foreman_user = conf.credentials.foreman_user
+        self.foreman_pass = conf.credentials.foreman_pass
+        self.test_server_user = conf.credentials.default_user
+        self.test_server_pass = conf.credentials.default_pass
+        self.foreman_url = conf.environment.foreman_url
+        self.test_server = conf.environment.test_server
+        self.operating_system = conf.job_params.operating_system
+        self.host_user = conf.credentials.default_user
+        self.host_pass = conf.credentials.default_pass
+        self.foreman_params = self.get_foreman_params(conf)
         self.test_server_ssh = paramiko.SSHClient()
         self.host_ssh = paramiko.SSHClient()
+
+    def get_foreman_params(self, conf):
+        operating_system = self.operating_system.lower()
+        f_params = conf.foreman_params[operating_system]
+        return f_params.split()
 
     def provision_hosts(self, hosts_fqdn):
         self.connect_to_test_server()
         self.change_os_and_medium(hosts_fqdn)
         self.set_build_in_foreman(hosts_fqdn)
         self.reboot_hosts(hosts_fqdn)
-        sleep(c.REBOOT_SLEEP)  # allows host to gracefully reboot
+        # allows host to gracefully reboot
+        sleep(consts.SshIntervals.REBOOT_SLEEP)
         self.wait_for_reprovision_to_finish(hosts_fqdn)
         self.disconnect_from_test_server()
 
@@ -136,7 +142,7 @@ class Provisioning(object):
             self.host_ssh.connect(hostname=host_fqdn,
                                   username=self.host_user,
                                   password=self.host_pass,
-                                  timeout=c.SSH_TIMEOUT)
+                                  timeout=consts.SshIntervals.SSH_TIMEOUT)
             LOG.info('Connected to host: {fqdn}'.format(fqdn=host_fqdn))
 
     def reboot_hosts(self, hosts_fqdn_list):
@@ -151,12 +157,13 @@ class Provisioning(object):
         for host_fqdn in hosts_fqdn_list:
             LOG.info('Waiting for reprovision of: {fqdn}'
                      .format(fqdn=host_fqdn))
-            for i in xrange(1, c.RECONNECTION_ATTEMPTS+1):
+            for i in xrange(1, consts.SshIntervals.RECONNECTION_ATTEMPTS+1):
 
                 LOG.info('Attempting to open SSH connection to {fqdn}, '
                          'Attempt {i} out of {num_of_retries}'
                          .format(fqdn=host_fqdn, i=i,
-                                 num_of_retries=c.RECONNECTION_ATTEMPTS))
+                                 num_of_retries=
+                                 consts.SshIntervals.RECONNECTION_ATTEMPTS))
                 try:
                     self.connect_to_host(host_fqdn)
 
@@ -164,9 +171,10 @@ class Provisioning(object):
                     LOG.info('Failed to connect to {fqdn} with exception: '
                              '{exception}'.format(fqdn=host_fqdn, exception=e))
                     LOG.info('')
-                    LOG.info('Sleeping for {x} Seconds'
-                             .format(x=c.RECONNECTION_INTERVAL))
-                    sleep(c.RECONNECTION_INTERVAL)
+                    LOG.info(
+                        'Sleeping for {x} Seconds'
+                        .format(x=consts.SshIntervals.RECONNECTION_INTERVAL))
+                    sleep(consts.SshIntervals.RECONNECTION_INTERVAL)
 
                 else:
                     LOG.info('Restored connection to {fqdn}'

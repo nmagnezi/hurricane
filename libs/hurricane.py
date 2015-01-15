@@ -1,13 +1,13 @@
 import logging
 import os
+import pprint
 from time import sleep
 
-import pprint
-
+from config import consts
 from libs.deployer import Deployer
 from libs.infra import Provisioning
-import libs.utils as utils
-import config.constants as c
+from libs import utils
+
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -17,45 +17,44 @@ LOG.addHandler(console)
 
 def run(config_file):
     # TODO: check that the config file was opened successfully.
-    job_dict = utils.build_dict_from_file(os.path.join(c.CONFIG_FILE_DIRECTORY,
-                                                       config_file))
-    LOG.info(pprint.pformat(job_dict))
-    utils.print_job_dict(job_dict)
-    hosts_fqdn = [i.split('/')[0] for i in
-                  job_dict[c.JOB]['hosts_and_roles'].split(", ")]
-    provisioner = Provisioning(job_dict)
+    CONF = utils.file2bunch(os.path.join(consts.Paths.CONFIG_FILE_DIRECTORY,
+                                         config_file))
+    LOG.info(pprint.pformat(CONF))
+    hosts_fqdn = [i.split('/')[0] for i in 
+                  CONF.job_params.hosts_and_roles.split(", ")]
+    provisioner = Provisioning(CONF)
 
     # Reprovision Hosts via foreman
-    if utils.do_exec(job_dict[c.JOB]['reprovision']):
-        if utils.do_exec(job_dict[c.JOB]['rebuild_test_client']) and \
-           utils.do_exec(job_dict[c.JOB]['run_tests']):
-            test_client_fqdn = job_dict[c.JOB]['test_client_fqdn']
+    if utils.do_exec(CONF.job_params.reprovision):
+        if utils.do_exec(CONF.job_params.rebuild_test_client) and \
+           utils.do_exec(CONF.job_params.run_tests):
+            test_client_fqdn = CONF.job_params.test_client_fqdn
             hosts_fqdn.append(test_client_fqdn)
         provisioner.provision_hosts(list(set(hosts_fqdn)))
     else:
         LOG.info('Reprovisioning disabled, Skipping...')
 
-    main = Deployer(job_dict)
+    main = Deployer(CONF)
 
     # Configure repositories
-    if utils.do_exec(main.job_dict[c.JOB]['repositories']):
+    if utils.do_exec(main.CONF.job_params.repositories):
         main.config_all_openstack_hosts('remove_all_yum_repos')
         main.create_yum_repos_all_openstack_hosts(
-            main.job_dict[c.JOB]['repositories'],
-            main.job_dict[c.JOB]['openstack_build'])
+            main.CONF.job_params.repositories, 
+            main.CONF.job_params.openstack_build)
     else:
         LOG.info('Repository list is empty, Skipping...')
 
     # Pre installation configurations
-    if utils.do_exec(main.job_dict[c.JOB]['pre_install_configs']):
+    if utils.do_exec(main.CONF.job_params.pre_install_configs):
         main.config_all_openstack_hosts(
-            main.job_dict[c.JOB]['pre_install_configs'])
+            main.CONF.job_params.pre_install_configs)
     else:
         LOG.info('Pre installation configurations list is empty, Skipping...')
 
     # OpenStack installation
-    if utils.do_exec(main.job_dict[c.JOB]['install_openstack']):
-        if main.job_dict[c.JOB]['openstack_installer'] == 'packstack':
+    if utils.do_exec(main.CONF.job_params.install_openstack):
+        if main.CONF.job_params.openstack_installer == 'packstack':
             controller_host = main.determine_controller_host()
             networker_host = main.determine_networker_host()
             controller_host.open_connection()
@@ -70,20 +69,22 @@ def run(config_file):
             main.installer.install_openstack(controller_host)
             LOG.info('Rebooting All nodes in due to possible kernel update')
             provisioner.reboot_hosts(list(set(hosts_fqdn)))
-            sleep(c.REBOOT_SLEEP)  # allows host to gracefully reboot
+            # allows host to gracefully reboot
+            sleep(consts.SshIntervals.REBOOT_SLEEP)
             provisioner.wait_for_reprovision_to_finish(list(set(hosts_fqdn)))
 
     else:
         LOG.info('OpenStack installation set to false, Skipping...')
+
     # Post installation configurations
-    if utils.do_exec(main.job_dict[c.JOB]['post_install_configs']):
+    if utils.do_exec(main.CONF.job_params.post_install_configs):
         main.config_all_openstack_hosts(
-            main.job_dict[c.JOB]['post_install_configs'])
+            main.CONF.job_params.post_install_configs)
     else:
         LOG.info('Post installation configurations list is empty, Skipping...')
 
     # Run Tests (WIP)
-    if utils.do_exec(main.job_dict[c.JOB]['run_tests']):
-        tests_repository = main.job_dict[c.JOB]['tests_repository']
-        tests = main.job_dict[c.JOB]['tests']
-        #if utils.do_exec(main.job_dict[c.JOB]['rebuild_test_client']):
+    if utils.do_exec(main.CONF.job_params.run_tests):
+        tests_repository = main.CONF.job_params.tests_repository
+        tests = main.CONF.job_params.tests
+        #if utils.do_exec(main.CONF.job_params.rebuild_test_client):

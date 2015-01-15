@@ -1,10 +1,12 @@
 import logging
+
 import paramiko
-import config.constants as c
-from libs.host import Host
+
 from libs.configs import Configs
-from installer.packstack.packstack import Packstack
+from config import consts
 from installer.foreman.foreman import Foreman
+from libs.host import Host
+from installer.packstack.packstack import Packstack
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -14,17 +16,17 @@ LOG.addHandler(console)
 
 class Deployer(object):
 
-    def __init__(self, job_dict):
-        self.job_dict = job_dict
+    def __init__(self, conf):
+        self.CONF = conf
         self.check_hosts_connectivity()
         self.installer = self.init_installer()
         self.openstack_hosts = self.build_hosts_list()
-        self.configurations = Configs(self.job_dict)
+        self.configurations = Configs(self.CONF)
 
     def check_hosts_connectivity(self):
-        username = self.job_dict[c.CREDENTIALS]['default_user']
-        password = self.job_dict[c.CREDENTIALS]['default_pass']
-        hosts_and_roles = self.job_dict[c.JOB]['hosts_and_roles']
+        username = self.CONF.credentials.default_user
+        password = self.CONF.credentials.default_pass
+        hosts_and_roles = self.CONF.job_params.hosts_and_roles
         hosts_fqdn = [i.split('/')[0] for i in hosts_and_roles.split(", ")]
         for host_fqdn in list(set(hosts_fqdn)):
             LOG.info('Checking {fqdn} availability via SSH'
@@ -32,8 +34,10 @@ class Deployer(object):
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             try:
-                ssh.connect(hostname=host_fqdn, username=username,
-                            password=password, timeout=c.SSH_TIMEOUT)
+                ssh.connect(hostname=host_fqdn,
+                            username=username,
+                            password=password,
+                            timeout=consts.SshIntervals.SSH_TIMEOUT)
             except Exception as e:
                 LOG.info('Failed to establish SSH connection to {fqdn}'
                          .format(fqdn=host_fqdn))
@@ -46,20 +50,20 @@ class Deployer(object):
 
     def init_installer(self):
         """WIP"""
-        installer_name = self.job_dict[c.JOB]['openstack_installer']
+        installer_name = self.CONF.job_params.openstack_installer
         if installer_name == 'packstack':
-            return Packstack(self.job_dict)
+            return Packstack(self.CONF)
         elif installer_name == 'foreman':
-            return Foreman(self.job_dict)
+            return Foreman(self.CONF)
 
     def build_hosts_list(self):
-        hosts_and_roles = self.job_dict[c.JOB]['hosts_and_roles']
+        hosts_and_roles = self.CONF.job_params.hosts_and_roles
         openstack_hosts = []
         for host_and_role in hosts_and_roles.split(", "):
             host_and_role_split = host_and_role.split('/')
             host_fqdn = host_and_role_split[0]
             role_name = host_and_role_split[1]
-            tmp_host = Host(host_fqdn, role_name, self.job_dict)
+            tmp_host = Host(host_fqdn, role_name, self.CONF)
             openstack_hosts.append(tmp_host)
         return openstack_hosts
 
@@ -77,11 +81,11 @@ class Deployer(object):
                 getattr(self.configurations, config)(openstack_host)
 
     def config_networker_ext_net_interface(self):
-        installer_name = self.job_dict[c.JOB]['openstack_installer']
-        os_ver = self.job_dict[c.JOB]['openstack_version']
+        installer_name = self.CONF.job_params.openstack_installer
+        os_ver = self.CONF.job_params.openstack_version
         networker_option = '{ver}_{installer}_networker'\
                            .format(ver=os_ver.lower(), installer=installer_name)
-        networker_option_name = self.job_dict[c.CONSTANTS][networker_option]
+        networker_option_name = self.CONF.constants[networker_option]
         networker_role_name = \
             self.installer.get_tagged_value(networker_option_name)
         for tmp_host in self.openstack_hosts:
@@ -90,9 +94,9 @@ class Deployer(object):
 
     def determine_controller_host(self):
         """Assumption, controller is where the DB resides"""
-        os_ver = self.job_dict[c.JOB]['openstack_version']
+        os_ver = self.CONF.job_params.openstack_version
         LOG.info('openstack version: {os_ver},'.format(os_ver=os_ver))
-        installer_name = self.job_dict[c.JOB]['openstack_installer']
+        installer_name = self.CONF.job_params.openstack_installer
         LOG.info('installer name: {installer_name},'.format(installer_name=
                                                             installer_name))
         controller_option = '{ver}_{installer}_controller'\
@@ -100,7 +104,7 @@ class Deployer(object):
                                     installer=installer_name)
         LOG.info('controller option: {controller_option}'
                  .format(controller_option=controller_option))
-        controller_option_name = self.job_dict[c.CONSTANTS][controller_option]
+        controller_option_name = self.CONF.constants[controller_option]
         LOG.info('controller option name: {controller_option_name}'
                  .format(controller_option_name=controller_option_name))
         controller_role_name = \
@@ -114,18 +118,16 @@ class Deployer(object):
                 return tmp_host
 
     def determine_networker_host(self):
-        os_ver = self.job_dict[c.JOB]['openstack_version']
+        os_ver = self.CONF.job_params.openstack_version
         LOG.info('openstack version: {os_ver},'.format(os_ver=os_ver))
-        installer_name = self.job_dict[c.JOB]['openstack_installer']
+        installer_name = self.CONF.job_params.openstack_installer
         LOG.info('installer name: {installer_name},'.format(installer_name=
                                                             installer_name))
         networker_option = '{ver}_{installer}_networker'\
-                           .format(ver=os_ver.lower(),
-                                   installer=installer_name)
+                           .format(ver=os_ver.lower(), installer=installer_name)
         LOG.info('networker option: {networker_option}'
                  .format(networker_option=networker_option))
-        networker_option_name = \
-            self.job_dict[c.CONSTANTS][networker_option]
+        networker_option_name = self.CONF.constants[networker_option]
         LOG.info('networker option name: {networker_option_name}'
                  .format(networker_option_name=networker_option_name))
         networker_role_name = \
@@ -143,9 +145,9 @@ class Deployer(object):
         host.run_bash_command(cmd)
 
     def distribute_public_key_to_openstack_hosts(self, host):
-        username = self.job_dict[c.CREDENTIALS]['default_user']
-        password = self.job_dict[c.CREDENTIALS]['default_pass']
-        hosts_and_roles = self.job_dict[c.JOB]['hosts_and_roles']
+        username = self.CONF.credentials.default_user
+        password = self.CONF.credentials.default_pass
+        hosts_and_roles = self.CONF.job_params.hosts_and_roles
         hosts_fqdn = [i.split('/')[0] for i in hosts_and_roles.split(", ")]
 
         cmd1 = 'echo "StrictHostKeyChecking no" > /root/.ssh/config'

@@ -1,9 +1,11 @@
-import paramiko
-import logging
 import datetime
 import pprint
+import logging
+
+import paramiko
 import yaml
-import config.constants as c
+
+from config import consts
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -13,20 +15,20 @@ LOG.addHandler(console)
 
 class Host(object):
 
-    def __init__(self, fqdn, role, job_dict):
+    def __init__(self, fqdn, role, conf):
         self.fqdn = fqdn
         self.role = role
         self.hostname = fqdn.split('.')[0]
-        self.username = job_dict[c.CREDENTIALS]['default_user']
-        self.password = job_dict[c.CREDENTIALS]['default_pass']
+        self.username = conf.credentials.default_user
+        self.password = conf.credentials.default_pass
         self.ssh = paramiko.SSHClient()
         self.host_facts = self.facter2yaml()
         self.host_type = self.get_host_type()
         self.ip_address = self.get_host_ip_address()
         self.os_name = self.get_os_name()
         self.mgmt_interface = self.get_mgmt_interface()
-        self.tenant_interface = self.get_tenant_interface(
-            job_dict[c.ENVIRONMENT]['tenant_nic_speed'])
+        self.tenant_interface = \
+            self.get_tenant_interface(conf.environment.tenant_nic_speed)
         self.print_host()
 
     def facter2yaml(self):
@@ -90,8 +92,10 @@ class Host(object):
 
     def open_connection(self):
         self.ssh.set_missing_host_key_policy(paramiko.WarningPolicy())
-        self.ssh.connect(hostname=self.fqdn, username=self.username,
-                         password=self.password, timeout=c.SSH_TIMEOUT)
+        self.ssh.connect(hostname=self.fqdn,
+                         username=self.username,
+                         password=self.password,
+                         timeout=consts.SshIntervals.SSH_TIMEOUT)
 
     def close_connection(self):
         self.ssh.close()

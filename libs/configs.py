@@ -1,7 +1,7 @@
-import logging
 import datetime
+import logging
 import os
-import config.constants as c
+
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -12,8 +12,8 @@ LOG.addHandler(console)
 class Configs(object):
 # Pre and Post installation configurations
 
-    def __init__(self, job_dict):
-        self.job_dict = job_dict
+    def __init__(self, conf):
+        self.CONF = conf
 
     def create_yum_repo(self, host, repo_name, build):
         LOG.info('{time} {fqdn}: Creating yum repo {repo_name}'
@@ -21,7 +21,7 @@ class Configs(object):
                                                                '%H:%M:%S'),
                          fqdn=host.fqdn, repo_name=repo_name))
 
-        repo_url = self.job_dict[c.REPO][repo_name]
+        repo_url = self.CONF.repositories[repo_name]
         if '{build}' in repo_url:  # check if there is a build number to inject
             repo_url = str(repo_url).format(build=build)
 
@@ -117,7 +117,7 @@ class Configs(object):
         host.run_bash_command(cmd3)
 
     def rhos_release(self, host):
-        rpm_url = self.job_dict[c.CI]['rhos-release']
+        rpm_url = self.CONF.ci.rhos_release
         self.install_rpm(host, rpm_url)
         cmd1 = 'ls -1 /etc/yum.repos.d/*.repo | grep -v "rhos" | xargs rm -f'
         cmd2 = 'yum update -y rhos-release'
@@ -126,8 +126,7 @@ class Configs(object):
 
     def rhos_release_grizzly(self, host):
         self.rhos_release(host)
-        openstack_build = \
-            self.job_dict[c.JOB]['openstack_build']
+        openstack_build = self.CONF.job_params.openstack_build
         cmd1 = 'rhos-release 3'
         cmd2 = 'sed -i s/"latest\/\RHOS-3.0"/"{puddle}\/\RHOS-3.0"/g ' \
                '/etc/yum.repos.d/rhos-release*'.format(puddle=openstack_build)
@@ -137,8 +136,7 @@ class Configs(object):
 
     def rhos_release_havana(self, host):
         self.rhos_release(host)
-        openstack_build = \
-            self.job_dict[c.JOB]['openstack_build']
+        openstack_build = self.CONF.job_params.openstack_build
         cmd1 = 'rhos-release 4'
         cmd2 = 'sed -i s/"latest\/\RHOS-4.0"/"{puddle}\/\RHOS-4.0"/g ' \
                '/etc/yum.repos.d/rhos-release*'.format(puddle=openstack_build)
@@ -148,8 +146,8 @@ class Configs(object):
 
     def rhos_release_icehouse(self, host):
         self.rhos_release(host)
-        openstack_build = self.job_dict[c.JOB]['openstack_build']
-        operating_system = self.job_dict[c.JOB]['operating_system']
+        openstack_build = self.CONF.job_params.openstack_build
+        operating_system = self.CONF.job_params.operating_system
 
         cmd1 = 'rhos-release 5'
         if 'rhel6' in operating_system:
@@ -168,19 +166,19 @@ class Configs(object):
 
     def rhos_release_icehouse_adv(self, host):
         self.rhos_release(host)
-        openstack_build = self.job_dict[c.JOB]['openstack_build']
+        openstack_build = self.CONF.job_params.openstack_build
         cmd = 'rhos-release 5a -p {puddle}'.format(puddle=openstack_build)
         host.run_bash_command(cmd)
 
     def rhos_release_juno(self, host):
         self.rhos_release(host)
-        openstack_build = self.job_dict[c.JOB]['openstack_build']
+        openstack_build = self.CONF.job_params.openstack_build
         cmd = 'rhos-release 6 -p {puddle}'.format(puddle=openstack_build)
         host.run_bash_command(cmd)
 
     def rhos_release_juno_adv(self, host):
         self.rhos_release(host)
-        openstack_build = self.job_dict[c.JOB]['openstack_build']
+        openstack_build = self.CONF.job_params.openstack_build
         cmd = 'rhos-release 6a -p {puddle}'.format(puddle=openstack_build)
         host.run_bash_command(cmd)
 
@@ -223,7 +221,7 @@ class Configs(object):
         :param host: the host that will be added with sub interfaces
         :return: nothing
         """
-        ext_vlan = self.job_dict[c.JOB]['ext_vlan']
+        ext_vlan = self.CONF.job_params.ext_vlan
         if not host.host_type == 'vm':
             ext_vlan_range = ext_vlan.split(':')
             sub_interfaces = list(xrange(int(ext_vlan_range[0]),
@@ -277,8 +275,8 @@ class Configs(object):
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
                                                                '%H:%M:%S'),
                          fqdn=host.fqdn))
-        rhn_user = self.job_dict[c.CREDENTIALS]['rhn_user']
-        rhn_pass = self.job_dict[c.CREDENTIALS]['rhn_pass']
+        rhn_user = self.CONF.credentials.rhn_user
+        rhn_pass = self.CONF.credentials.rhn_pass
         cmd = 'rhnreg_ks --serverUrl=https://xmlrpc.rhn.redhat.com/XMLRPC ' \
               '--username={rhn_user} --password={rhn_pass} ' \
               '--profilename={fqdn} --nohardware --novirtinfo' \
@@ -298,7 +296,7 @@ class Configs(object):
                 .format(name=host.tenant_interface)
             interface_file_path = os.path.join(interface_file_location,
                                                interface_file_name)
-            tun_subnet = self.job_dict[c.ENVIRONMENT]['tunneling_subnet']
+            tun_subnet = self.CONF.environment.tunneling_subnet
 
             cmd1 = 'ifconfig {i}'.format(i=host.mgmt_interface) + \
                    " | grep -v inet6 | awk \'/inet/ {print $2}\'" \
@@ -355,7 +353,7 @@ class Configs(object):
                  .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
                                                                '%H:%M:%S'),
                          fqdn=host.fqdn))
-        answer_file = self.job_dict['job_params']['installer_conf_file']
+        answer_file = self.CONF.job_params.installer_conf_file
         robot_file = 'ANSWER_FILE'
         cmd = 'mv {answer_file} {robot_file}'.format(answer_file=answer_file,
                                                      robot_file=robot_file)
