@@ -128,8 +128,10 @@ class Configs(object):
     def rhos_release_icehouse(self, host):
         self.rhos_release(host)
         openstack_build = self.CONF.job_params.openstack_build
-        cmd = 'rhos-release 5 -p {puddle}'.format(puddle=openstack_build)
-        host.run_bash_command(cmd)
+        cmd1 = 'rhos-release 5 -p {puddle}'.format(puddle=openstack_build)
+        cmd2 = 'yum-config-manager --disable RHEL-6-Server-OS-Foreman'
+        host.run_bash_command(cmd1)
+        host.run_bash_command(cmd2)
 
     def rhos_release_icehouse_adv(self, host):
         self.rhos_release(host)
