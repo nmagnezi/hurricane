@@ -127,42 +127,20 @@ class Configs(object):
     def rhos_release_grizzly(self, host):
         self.rhos_release(host)
         openstack_build = self.CONF.job_params.openstack_build
-        cmd1 = 'rhos-release 3'
-        cmd2 = 'sed -i s/"latest\/\RHOS-3.0"/"{puddle}\/\RHOS-3.0"/g ' \
-               '/etc/yum.repos.d/rhos-release*'.format(puddle=openstack_build)
-
-        host.run_bash_command(cmd1)
-        host.run_bash_command(cmd2)
+        cmd = 'rhos-release 3 -p {puddle}'.format(puddle=openstack_build)
+        host.run_bash_command(cmd)
 
     def rhos_release_havana(self, host):
         self.rhos_release(host)
         openstack_build = self.CONF.job_params.openstack_build
-        cmd1 = 'rhos-release 4'
-        cmd2 = 'sed -i s/"latest\/\RHOS-4.0"/"{puddle}\/\RHOS-4.0"/g ' \
-               '/etc/yum.repos.d/rhos-release*'.format(puddle=openstack_build)
-
-        host.run_bash_command(cmd1)
-        host.run_bash_command(cmd2)
+        cmd = 'rhos-release 4 -p {puddle}'.format(puddle=openstack_build)
+        host.run_bash_command(cmd)
 
     def rhos_release_icehouse(self, host):
         self.rhos_release(host)
         openstack_build = self.CONF.job_params.openstack_build
-        operating_system = self.CONF.job_params.operating_system
-
-        cmd1 = 'rhos-release 5'
-        if 'rhel6' in operating_system:
-            cmd2 = 'sed -i ' \
-                   's/"latest\/\RH6-RHOS-5.0"/"{puddle}\/\RH6-RHOS-5.0"/g ' \
-                   '/etc/yum.repos.d/rhos-release*'\
-                   .format(puddle=openstack_build)
-        else:  # operating_system == 'rhel7.0'
-            cmd2 = 'sed -i ' \
-                   's/"latest\/\RH7-RHOS-5.0"/"{puddle}\/\RH7-RHOS-5.0"/g ' \
-                   '/etc/yum.repos.d/rhos-release*'\
-                   .format(puddle=openstack_build)
-
-        host.run_bash_command(cmd1)
-        host.run_bash_command(cmd2)
+        cmd = 'rhos-release 5 -p {puddle}'.format(puddle=openstack_build)
+        host.run_bash_command(cmd)
 
     def rhos_release_icehouse_adv(self, host):
         self.rhos_release(host)
