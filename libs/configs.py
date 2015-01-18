@@ -1,7 +1,7 @@
-import datetime
 import logging
 import os
 
+from libs import utils
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -17,9 +17,9 @@ class Configs(object):
 
     def create_yum_repo(self, host, repo_name, build):
         LOG.info('{time} {fqdn}: Creating yum repo {repo_name}'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn, repo_name=repo_name))
+                 .format(time=utils.timestamp(),
+                         fqdn=host.fqdn,
+                         repo_name=repo_name))
 
         repo_url = self.CONF.repositories[repo_name]
         if '{build}' in repo_url:  # check if there is a build number to inject
@@ -44,49 +44,42 @@ class Configs(object):
 
     def clean_yum_cache(self, host):
         LOG.info('{time} {fqdn}: Cleaning yum cache'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn))
+                 .format(time=utils.timestamp(), fqdn=host.fqdn))
         cmd = 'yum clean all'
         host.run_bash_command(cmd)
 
     def remove_all_yum_repos(self, host):
         LOG.info('{time} {fqdn}: Removing all yum repos'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn))
+                 .format(time=utils.timestamp(), fqdn=host.fqdn))
         cmd = 'mv /etc/yum.repos.d/*.repo /tmp'
         host.run_bash_command(cmd)
 
     def yum_update(self, host):
         LOG.info('{time} {fqdn}: updating all packages'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn))
+                 .format(time=utils.timestamp(), fqdn=host.fqdn))
         cmd = 'yum update -y --nogpgcheck'
         host.run_bash_command(cmd)
 
     def install_rpm(self, host, rpm_name):
         LOG.info('{time} {fqdn}: installing {rpm}'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn, rpm=rpm_name))
+                 .format(time=utils.timestamp(),
+                         fqdn=host.fqdn,
+                         rpm=rpm_name))
         cmd = 'yum install -y --nogpgcheck {rpm}'.format(rpm=rpm_name)
         host.run_bash_command(cmd)
 
     def uninstall_rpm(self, host, rpm_name):
-        LOG.info('{time} {fqdn}: removing {rpm}'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn, rpm=rpm_name))
+        LOG.info('{time} {fqdn}: removing {rpm}'.format(time=utils.timestamp(),
+                                                        fqdn=host.fqdn,
+                                                        rpm=rpm_name))
         cmd = 'yum remove -y {rpm}'.format(rpm=rpm_name)
         host.run_bash_command(cmd)
 
     def yum_disable_repo(self, host, repo_name):
         LOG.info('{time} {fqdn}: disabling {repo}'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn, repo=repo_name))
+                 .format(time=utils.timestamp(),
+                         fqdn=host.fqdn,
+                         repo=repo_name))
         cmd = 'yum-config-manager --disable {repo}'.format(repo=repo_name)
         host.run_bash_command(cmd)
 
@@ -95,17 +88,13 @@ class Configs(object):
 
     def tlv_openstack_repo(self, host):
         LOG.info('{time} {fqdn}: updating OpenStack repo path'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn))
+                 .format(time=utils.timestamp(), fqdn=host.fqdn))
         cmd = "sed -i s/lab.bos/eng.tlv/g /etc/yum.repos.d/rhos-release*"
         host.run_bash_command(cmd)
 
     def disable_and_persist_selinux(self, host):
         LOG.info('{time} {fqdn}: disabling SELinux'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn))
+                 .format(time=utils.timestamp(), fqdn=host.fqdn))
 
         cmd1 = 'setenforce 0'
         cmd2 = 'sed -i "s/^SELINUX=.*/SELINUX=permissive/g" /etc/selinux/config'
@@ -162,9 +151,9 @@ class Configs(object):
 
     def restart_linux_service(self, host, service_name):
         LOG.info('{time} {fqdn}: restarting {service_name}'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn, service_name=service_name))
+                 .format(time=utils.timestamp(),
+                         fqdn=host.fqdn,
+                         service_name=service_name))
         if 'rhel6' in host.os_name:
             cmd = 'service {service} restart'\
                 .format(service_name=service_name)
@@ -177,10 +166,8 @@ class Configs(object):
 
     def ovs_add_port_to_br(self, host, br_name, port_name):
         LOG.info('{time} {fqdn}: adding {port_name} to {br_name}'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn, port_name=port_name,
-                         br_name=br_name))
+                 .format(time=utils.timestamp(), fqdn=host.fqdn,
+                         port_name=port_name, br_name=br_name))
         cmd = 'ovs-vsctl add-port {br_name} {port_name}'\
               .format(br_name=br_name, port_name=port_name)
 
@@ -211,11 +198,9 @@ class Configs(object):
                 interface_file_location = '/etc/sysconfig/network-scripts'
                 interface_file_path = os.path.join(interface_file_location,
                                                    interface_file_name)
-                timstamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 LOG.info('{time} {fqdn}: Creating sub interface: '
                          '{interface_file_name}'
-                         .format(time=timstamp,
-                                 fqdn=host.fqdn,
+                         .format(time=utils.timestamp(), fqdn=host.fqdn,
                                  interface_file_name=interface_file_name))
                 bootproto = 'none' if 'rhel7' in host.os_name else 'dhcp'
                 cmd1 = 'echo DEVICE="{name}.{vlan}" > {file_path}'\
@@ -250,9 +235,7 @@ class Configs(object):
         :param host: the host that will be registered to rhn
         """
         LOG.info('{time} {fqdn}: registering to rhn'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn))
+                 .format(time=utils.timestamp(), fqdn=host.fqdn))
         rhn_user = self.CONF.credentials.rhn_user
         rhn_pass = self.CONF.credentials.rhn_pass
         cmd = 'rhnreg_ks --serverUrl=https://xmlrpc.rhn.redhat.com/XMLRPC ' \
@@ -310,9 +293,7 @@ class Configs(object):
         Disable NetworkManager due to a known issue.
         """
         LOG.info('{time} {fqdn}: Switching off NetworkManager'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn))
+                 .format(time=utils.timestamp(), fqdn=host.fqdn))
         cmd1 = 'systemctl disable NetworkManager'
         cmd2 = 'systemctl stop NetworkManager'
         cmd3 = 'systemctl restart network'
@@ -328,9 +309,7 @@ class Configs(object):
         :param host: a host which holds the packstack answer file
         """
         LOG.info('{time} {fqdn}: Changing answer file name to ANSWER_FILE'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=host.fqdn))
+                 .format(time=utils.timestamp(), fqdn=host.fqdn))
         answer_file = self.CONF.job_params.installer_conf_file
         robot_file = 'ANSWER_FILE'
         cmd = 'mv {answer_file} {robot_file}'.format(answer_file=answer_file,

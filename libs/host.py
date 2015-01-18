@@ -6,6 +6,7 @@ import paramiko
 import yaml
 
 from config import consts
+from libs import utils
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -107,18 +108,17 @@ class Host(object):
         stderr = ssh_stdout.channel.recv_exit_status()
 
         LOG.info('{time} {fqdn}: cmd:    {bash_command}'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
-                         fqdn=self.fqdn, bash_command=bash_command))
+                 .format(time=utils.timestamp(),
+                         fqdn=self.fqdn,
+                         bash_command=bash_command))
+
         LOG.info('{time} {fqdn}: stdout: {ssh_stdout}'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
+                 .format(time=utils.timestamp(),
                          fqdn=self.fqdn,
                          ssh_stdout=stdout))
 
         LOG.info('{time} {fqdn}: stderr: {ssh_stderr}'
-                 .format(time=datetime.datetime.now().strftime('%Y-%m-%d '
-                                                               '%H:%M:%S'),
+                 .format(time=utils.timestamp(),
                          fqdn=self.fqdn,
                          ssh_stderr=stderr))
 

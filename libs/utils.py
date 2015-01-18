@@ -1,4 +1,5 @@
 from ConfigParser import ConfigParser
+import datetime
 import logging
 
 import bunch
@@ -27,3 +28,7 @@ def file2bunch(conf):
 def do_exec(value):
     skip_values = ['', 'false', 'None', None]
     return True if not value in skip_values else False
+
+
+def timestamp():
+    return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
