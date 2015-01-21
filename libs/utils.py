@@ -1,9 +1,11 @@
 from ConfigParser import ConfigParser
 import datetime
 import logging
+import os
 
 import bunch
 
+from config import consts
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -11,6 +13,10 @@ console = logging.StreamHandler()
 LOG.addHandler(console)
 
 # Helper functions
+
+
+def get_file_path(config_file):
+    return os.path.join(consts.Paths.CONFIG_FILE_DIRECTORY, config_file)
 
 
 def file2bunch(conf):

@@ -13,7 +13,15 @@ class Configs(object):
 # Pre and Post installation configurations
 
     def __init__(self, conf):
-        self.CONF = conf
+        self.repositories = conf.repositories
+        self.rhos = conf.ci.rhos_release
+        self.openstack_version = conf.job_params.openstack_version
+        self.openstack_build = conf.job_params.openstack_build
+        self.ext_vlan = conf.job_params.ext_vlan
+        self.rhn_user = conf.credentials.rhn_user
+        self.rhn_pass = conf.credentials.rhn_pass
+        self.tun_subnet = conf.environment.tunneling_subnet
+        self.answer_file = conf.job_params.installer_conf_file
 
     def create_yum_repo(self, host, repo_name, build):
         LOG.info('{time} {fqdn}: Creating yum repo {repo_name}'
@@ -21,7 +29,7 @@ class Configs(object):
                          fqdn=host.fqdn,
                          repo_name=repo_name))
 
-        repo_url = self.CONF.repositories[repo_name]
+        repo_url = self.repositories[repo_name]
         if '{build}' in repo_url:  # check if there is a build number to inject
             repo_url = str(repo_url).format(build=build)
 
@@ -106,50 +114,21 @@ class Configs(object):
         host.run_bash_command(cmd3)
 
     def rhos_release(self, host):
-        rpm_url = self.CONF.ci.rhos_release
+        rpm_url = self.rhos
         self.install_rpm(host, rpm_url)
         cmd1 = 'ls -1 /etc/yum.repos.d/*.repo | grep -v "rhos" | xargs rm -f'
         cmd2 = 'yum update -y rhos-release'
         host.run_bash_command(cmd1)
         host.run_bash_command(cmd2)
 
-    def rhos_release_grizzly(self, host):
-        self.rhos_release(host)
-        openstack_build = self.CONF.job_params.openstack_build
-        cmd = 'rhos-release 3 -p {puddle}'.format(puddle=openstack_build)
-        host.run_bash_command(cmd)
+        vers = {'grizzly': '3', 'havana': '4', 'icehouse': '5',
+                'icehouse_adv': '5a', 'juno': '6', 'juno_adv': '6a',
+                'kilo': '7'}
 
-    def rhos_release_havana(self, host):
-        self.rhos_release(host)
-        openstack_build = self.CONF.job_params.openstack_build
-        cmd = 'rhos-release 4 -p {puddle}'.format(puddle=openstack_build)
-        host.run_bash_command(cmd)
-
-    def rhos_release_icehouse(self, host):
-        self.rhos_release(host)
-        openstack_build = self.CONF.job_params.openstack_build
-        cmd1 = 'rhos-release 5 -p {puddle}'.format(puddle=openstack_build)
-        cmd2 = 'yum-config-manager --disable RHEL-6-Server-OS-Foreman'
-        host.run_bash_command(cmd1)
-        host.run_bash_command(cmd2)
-
-    def rhos_release_icehouse_adv(self, host):
-        self.rhos_release(host)
-        openstack_build = self.CONF.job_params.openstack_build
-        cmd = 'rhos-release 5a -p {puddle}'.format(puddle=openstack_build)
-        host.run_bash_command(cmd)
-
-    def rhos_release_juno(self, host):
-        self.rhos_release(host)
-        openstack_build = self.CONF.job_params.openstack_build
-        cmd = 'rhos-release 6 -p {puddle}'.format(puddle=openstack_build)
-        host.run_bash_command(cmd)
-
-    def rhos_release_juno_adv(self, host):
-        self.rhos_release(host)
-        openstack_build = self.CONF.job_params.openstack_build
-        cmd = 'rhos-release 6a -p {puddle}'.format(puddle=openstack_build)
-        host.run_bash_command(cmd)
+        cmd3 = 'rhos-release {ver} -p {puddle}'\
+               .format(ver=vers[self.openstack_version],
+                       puddle=self.openstack_build)
+        host.run_bash_command(cmd3)
 
     def restart_linux_service(self, host, service_name):
         LOG.info('{time} {fqdn}: restarting {service_name}'
@@ -188,9 +167,8 @@ class Configs(object):
         :param host: the host that will be added with sub interfaces
         :return: nothing
         """
-        ext_vlan = self.CONF.job_params.ext_vlan
         if not host.host_type == 'vm':
-            ext_vlan_range = ext_vlan.split(':')
+            ext_vlan_range = self.ext_vlan.split(':')
             sub_interfaces = list(xrange(int(ext_vlan_range[0]),
                                          int(ext_vlan_range[-1])+1))
             for sub_interface in sub_interfaces:
@@ -238,13 +216,13 @@ class Configs(object):
         """
         LOG.info('{time} {fqdn}: registering to rhn'
                  .format(time=utils.timestamp(), fqdn=host.fqdn))
-        rhn_user = self.CONF.credentials.rhn_user
-        rhn_pass = self.CONF.credentials.rhn_pass
         cmd = 'rhnreg_ks --serverUrl=https://xmlrpc.rhn.redhat.com/XMLRPC ' \
               '--username={rhn_user} --password={rhn_pass} ' \
               '--profilename={fqdn} --nohardware --novirtinfo' \
               ' --nopackages --use-eus-channel --force'\
-              .format(fqdn=host.fqdn, rhn_user=rhn_user, rhn_pass=rhn_pass)
+              .format(fqdn=host.fqdn,
+                      rhn_user=self.rhn_user,
+                      rhn_pass=self.rhn_pass)
         host.run_bash_command(cmd)
 
     def create_tunnel_interface(self, host):
@@ -259,7 +237,6 @@ class Configs(object):
                 .format(name=host.tenant_interface)
             interface_file_path = os.path.join(interface_file_location,
                                                interface_file_name)
-            tun_subnet = self.CONF.environment.tunneling_subnet
 
             cmd1 = 'ifconfig {i}'.format(i=host.mgmt_interface) + \
                    " | grep -v inet6 | awk \'/inet/ {print $2}\'" \
@@ -274,7 +251,7 @@ class Configs(object):
                    .format(option='ONBOOT', value='yes',
                            file_path=interface_file_path)
             cmd4 = 'echo IPADDR={tun_subnet}.{octate} >> {file_path}'\
-                   .format(tun_subnet=tun_subnet, octate=octate,
+                   .format(tun_subnet=self.tun_subnet, octate=octate,
                            file_path=interface_file_path)
             cmd5 = 'echo NETMASK=255.255.255.0 >> {file_path}'\
                    .format(file_path=interface_file_path)
@@ -312,8 +289,7 @@ class Configs(object):
         """
         LOG.info('{time} {fqdn}: Changing answer file name to ANSWER_FILE'
                  .format(time=utils.timestamp(), fqdn=host.fqdn))
-        answer_file = self.CONF.job_params.installer_conf_file
         robot_file = 'ANSWER_FILE'
-        cmd = 'mv {answer_file} {robot_file}'.format(answer_file=answer_file,
-                                                     robot_file=robot_file)
+        cmd = 'mv {answer_file} {robot_file}'\
+              .format(answer_file=self.answer_file, robot_file=robot_file)
         host.run_bash_command(cmd)

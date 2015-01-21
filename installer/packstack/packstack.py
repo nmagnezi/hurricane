@@ -44,10 +44,10 @@ class Packstack(object):
 
     def set_tagged_value(self, host, tag_name, tag_value):
         cmd = 'sed -i s/"<{tag_name}>"/"{tag_value}"/g ' \
-                       '/root/{answer_file_name}'\
-            .format(tag_name=tag_name,
-                    tag_value=tag_value,
-                    answer_file_name=self.packstack_answer_file_name)
+              '/root/{answer_file_name}'\
+              .format(tag_name=tag_name,
+                      tag_value=tag_value,
+                      answer_file_name=self.packstack_answer_file_name)
         host.run_bash_command(cmd)
 
     def configure_answer_file(self, controller, networker, openstack_hosts):

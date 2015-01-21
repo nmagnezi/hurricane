@@ -152,7 +152,6 @@ class Provisioning(object):
             LOG.info('Rebooting host: {fqdn}'.format(fqdn=host_fqdn))
 
     def wait_for_reprovision_to_finish(self, hosts_fqdn_list):
-        # TODO: a thread to monitor each host provisioning till timeout/success.
         # TODO: add a check that reprovision was successful, and halt if failed.
         for host_fqdn in hosts_fqdn_list:
             LOG.info('Waiting for reprovision of: {fqdn}'
