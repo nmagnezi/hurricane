@@ -34,6 +34,8 @@ for env_variable in os.environ:
     if ENV_VARIABLE_PREFIX in str(env_variable):
         option = env_variable.split(ENV_VARIABLE_PREFIX)[1].lower()
         value = os.environ.get(env_variable)
+        LOG.info('found {env} env variable with value: {val}'
+                 .format(env=env_variable, val=value))
         config.set(CONFIG_FILE_SECTION, option, value)
         LOG.info('{option} = {value}'.format(option=option, value=value))
 
