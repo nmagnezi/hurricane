@@ -5,8 +5,8 @@ class _Names(object):
 
 class _Paths(object):
     INSTALLER_CONFIG_FILE_DEFAULT_PATH = '/root'
-    INSTALLER_CONFIG_FILE_DIRCTORY = 'hurricane/installer/packstack/configs'
-    #INSTALLER_CONFIG_FILE_DIRCTORY = 'installer/packstack/configs'
+    INSTALLER_CONFIG_FILE_DIRCTORY = 'hurricane/installer/packstack/templates'
+    #INSTALLER_CONFIG_FILE_DIRCTORY = 'installer/packstack/templates'
     ENV_VARIABLE_PREFIX = 'DEPLOYER_'
     CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
     #CONFIG_FILE_DIRECTORY = 'config'
