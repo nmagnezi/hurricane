@@ -17,8 +17,8 @@ class Provisioning(object):
     def __init__(self, conf):
         self.foreman_user = conf.credentials.foreman_user
         self.foreman_pass = conf.credentials.foreman_pass
-        self.test_server_user = conf.credentials.default_user
-        self.test_server_pass = conf.credentials.default_pass
+        self.test_server_user = conf.credentials.server_default_user
+        self.test_server_pass = conf.credentials.server_default_pass
         self.foreman_url = conf.environment.foreman_url
         self.test_server = conf.environment.test_server
         self.operating_system = conf.job_params.operating_system
