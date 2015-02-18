@@ -2,7 +2,7 @@ from ConfigParser import ConfigParser
 import logging
 import os
 
-
+from config import consts
 """
 This script will configure the given config file section
 with relevant env variables.
@@ -17,8 +17,9 @@ LOG.addHandler(console)
 ENV_VARIABLE_PREFIX = 'DEPLOYER_'
 CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
 CONFIG_FILE_SECTION = 'job_params'
-CONFIG_FILE_NAME = os.environ.get(ENV_VARIABLE_PREFIX + 'JOB_CONF_FILE'
-                                  , 'config.ini')
+CONFIG_FILE_NAME = (os.environ.
+                    get(consts.Names.ENV_VARIABLE_PREFIX + 'JOB_CONF_FILE',
+                        'config.ini'))
 CONFIG_FILE_PATH = os.path.join(os.environ.get('WORKSPACE'),
                                 CONFIG_FILE_DIRECTORY,
                                 CONFIG_FILE_NAME)
