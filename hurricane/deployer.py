@@ -4,9 +4,9 @@ import paramiko
 
 from hurricane.configs import Configs
 from config import consts
-from installer.foreman.foreman import Foreman
 from hurricane.host import Host
-from installer.packstack.packstack import Packstack
+from plugins.installer.packstack.packstack import Packstack
+from plugins.installer.staypuft.staypuft import Staypuft
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -55,8 +55,8 @@ class Deployer(object):
         """WIP"""
         if self.installer_name == 'packstack':
             return Packstack(conf)
-        elif self.installer_name == 'foreman':
-            return Foreman(conf)
+        elif self.installer_name == 'staypuft':
+            return Staypuft(conf)
 
     def build_hosts_list(self, conf):
         openstack_hosts = []

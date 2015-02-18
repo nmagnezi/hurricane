@@ -12,7 +12,7 @@ console = logging.StreamHandler()
 LOG.addHandler(console)
 
 
-class Provisioning(object):
+class Foreman(object):
 
     def __init__(self, conf):
         self.foreman_user = conf.credentials.foreman_user

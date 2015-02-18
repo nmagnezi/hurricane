@@ -2,7 +2,7 @@ import logging
 import os
 
 from config import consts
-from libs import utils
+from hurricane import utils
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -82,7 +82,7 @@ class Packstack(object):
                 split_tag = tag.split('/')
                 tag_name = split_tag[0]
                 tag_value = split_tag[1]
-                if not tag_name in tags_to_inject:
+                if tag_name not in tags_to_inject:
                     tags_to_inject[tag_name] = []
                 tags_to_inject[tag_name].append(tag_value)
 

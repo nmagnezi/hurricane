@@ -4,7 +4,7 @@ from time import sleep
 
 from config import consts
 from hurricane.deployer import Deployer
-from hurricane.infra import Provisioning
+from plugins.provisioner.foreman.foreman import Foreman
 from hurricane import utils
 
 
@@ -19,8 +19,8 @@ class Manager(object):
     def __init__(self, conf):
         self.CONF = conf
         self.hosts_fqdn = self.get_hosts_list()
-        self.provisioner = Provisioning(self.CONF)
-        self.deployer = None  # must provision before spawning Deployer instance
+        self.provisioner = Foreman(self.CONF)
+        self.deployer = None  # must provision before spawning Deployer
 
     def get_hosts_list(self):
         return [i.split('/')[0] for i in
