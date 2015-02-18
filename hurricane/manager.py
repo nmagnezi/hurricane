@@ -18,15 +18,15 @@ class Manager(object):
 
     def __init__(self, conf):
         self.CONF = conf
-        self.hosts_fqdn = self.get_hosts_list()
+        self.hosts_fqdn = self._get_hosts_list()
         self.provisioner = Foreman(self.CONF)
         self.deployer = None  # must provision before spawning Deployer
 
-    def get_hosts_list(self):
+    def _get_hosts_list(self):
         return [i.split('/')[0] for i in
                 self.CONF.job_params.hosts_and_roles.split(", ")]
 
-    def provision(self):
+    def _provision(self):
         if utils.do_exec(self.CONF.job_params.reprovision):
             if utils.do_exec(self.CONF.job_params.rebuild_test_client) and \
                utils.do_exec(self.CONF.job_params.run_tests):
@@ -36,7 +36,7 @@ class Manager(object):
         else:
             LOG.info('Reprovisioning disabled, Skipping...')
 
-    def configure_repositories(self):
+    def _configure_repositories(self):
         if utils.do_exec(self.CONF.job_params.repositories):
             self.deployer.config_all_openstack_hosts('remove_all_yum_repos')
             self.deployer.create_yum_repos_all_openstack_hosts(
@@ -45,15 +45,15 @@ class Manager(object):
         else:
             LOG.info('Repository list is empty, Skipping...')
 
-    def preinstall_configs(self):
+    def _preinstall_configs(self):
         if utils.do_exec(self.CONF.job_params.pre_install_configs):
             pre_confs = self.CONF.job_params.pre_install_configs
             self.deployer.config_all_openstack_hosts(pre_confs)
         else:
             LOG.info('Pre installation configs list is empty, Skipping...')
 
-    def install_openstack(self):
-        if utils.do_exec(self.CONF.job_params.install_openstack):
+    def _install_openstack(self):
+        if utils.do_exec(self.CONF.job_params._install_openstack):
             if self.CONF.job_params.openstack_installer == 'packstack':
                 controller_host = self.deployer.determine_controller_host()
                 networker_host = self.deployer.determine_networker_host()
@@ -68,8 +68,8 @@ class Manager(object):
                     .configure_answer_file(controller_host,
                                            networker_host,
                                            self.deployer.openstack_hosts)
-                self.deployer.installer.install_openstack(controller_host)
-                LOG.info('Rebooting All nodes in due to possible kernel update')
+                self.deployer.installer._install_openstack(controller_host)
+                LOG.info('Rebooting All nodes due to possible kernel update')
                 self.provisioner.reboot_hosts(list(set(self.hosts_fqdn)))
                 # allows host to gracefully reboot
                 sleep(consts.SshIntervals.REBOOT_SLEEP)
@@ -78,14 +78,14 @@ class Manager(object):
         else:
             LOG.info('OpenStack installation set to false, Skipping...')
 
-    def postinstall_configs(self):
+    def _postinstall_configs(self):
         if utils.do_exec(self.CONF.job_params.post_install_configs):
             post_confs = self.CONF.job_params.post_install_configs
             self.deployer.config_all_openstack_hosts(post_confs)
         else:
             LOG.info('Post installation configs list is empty, Skipping...')
 
-    def run_tests(self):
+    def _run_tests(self):
         """
         WIP
         """
@@ -96,9 +96,10 @@ class Manager(object):
 
     def run(self):
         LOG.info(pprint.pformat(self.CONF))
-        self.provision()
+        self._provision()
         self.deployer = Deployer(self.CONF)
-        self.preinstall_configs()
-        self.install_openstack()
-        self.postinstall_configs()
-        # self.run_tests() #WIP
+        self._configure_repositories()
+        self._preinstall_configs()
+        self._install_openstack()
+        self._postinstall_configs()
+        # self._run_tests() #WIP

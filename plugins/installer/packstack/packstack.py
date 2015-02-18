@@ -17,9 +17,9 @@ class Packstack(object):
         self.installer_conf_tags = conf.job_params.installer_conf_file_tags
         self.ext_vlan = conf.job_params.ext_vlan
         self.ntp_server = conf.environment.default_ntp
-        self.answer_file = utils.file2bunch(self.get_file_path())
+        self.answer_file = utils.file2bunch(self._get_file_path())
 
-    def get_file_path(self):
+    def _get_file_path(self):
         path = os.path.join(consts.Paths.INSTALLER_CONFIG_FILE_DIRCTORY,
                             self.packstack_answer_file_name)
         file_path = '{path}{suffix}'.format(path=path,
@@ -42,7 +42,7 @@ class Packstack(object):
         tagged_value = self.answer_file.general[a]
         return tagged_value[1:-1]
 
-    def set_tagged_value(self, host, tag_name, tag_value):
+    def _set_tagged_value(self, host, tag_name, tag_value):
         cmd = 'sed -i s/"<{tag_name}>"/"{tag_value}"/g ' \
               '/root/{answer_file_name}'\
               .format(tag_name=tag_name,
@@ -101,7 +101,7 @@ class Packstack(object):
 
         # inject tagged values to answer file
         for tag in tags_to_inject.keys():
-            self.set_tagged_value(controller, tag,
+            self._set_tagged_value(controller, tag,
                                   ", ".join(tags_to_inject[tag]))
 
     def install_openstack(self, host):

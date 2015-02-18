@@ -23,39 +23,39 @@ class Host(object):
         self.username = conf.credentials.default_user
         self.password = conf.credentials.default_pass
         self.ssh = paramiko.SSHClient()
-        self.host_facts = self.facter2yaml()
-        self.host_type = self.get_host_type()
-        self.ip_address = self.get_host_ip_address()
-        self.os_name = self.get_os_name()
-        self.mgmt_interface = self.get_mgmt_interface()
-        self.tenant_interface = \
-            self.get_tenant_interface(conf.environment.tenant_nic_speed)
-        self.print_host()
+        self.host_facts = self._facter2yaml()
+        self.host_type = self._get_host_type()
+        self.ip_address = self._get_host_ip_address()
+        self.os_name = self._get_os_name()
+        self.mgmt_interface = self._get_mgmt_interface()
+        self.tenant_interface = (self._get_tenant_interface(conf.environment.
+                                                            tenant_nic_speed))
+        self._print_host()
 
-    def facter2yaml(self):
+    def _facter2yaml(self):
         self.open_connection()
-        self.install_prerequisites()
-        host_facts = self.init_facter()
+        self._install_prerequisites()
+        host_facts = self._init_facter()
         #self.close_connection()
         return host_facts
 
-    def init_facter(self):
+    def _init_facter(self):
         cmd = 'facter --yaml'
         facter_data, _ = self.run_bash_command(cmd)
         return yaml.safe_load(facter_data)
 
-    def install_prerequisites(self):
+    def _install_prerequisites(self):
         # TODO: verify prerequisites were successfully installed.
         cmd = 'yum install -y facter'
         self.run_bash_command(cmd)
 
-    def get_host_type(self):
+    def _get_host_type(self):
         return 'vm' if self.host_facts['is_virtual'] == 'true' else 'baremetal'
 
-    def get_host_ip_address(self):
+    def _get_host_ip_address(self):
         return self.host_facts['ipaddress'].encode('ascii', 'ignore')
 
-    def get_os_name(self):
+    def _get_os_name(self):
         # For some reason the facter names 'RHEL' as 'RedHat'.
         # This is a workaround to correct it (does not happen in Fedora)
         name = 'rhel' \
@@ -64,12 +64,12 @@ class Host(object):
         ver = self.host_facts['operatingsystemrelease']
         return ('{name}{ver}'.format(name=name, ver=ver)).lower()
 
-    def get_mgmt_interface(self):
+    def _get_mgmt_interface(self):
         cmd = "ip route | awk '/default/ {print $5}'"
         mgmt_interface, _ = self.run_bash_command(cmd)
         return mgmt_interface.strip()
 
-    def get_tenant_interface(self, tenant_nic_speed):
+    def _get_tenant_interface(self, tenant_nic_speed):
         """
         assumption: on baremetal machines, the tenant nic
         a. has no ip address
@@ -130,5 +130,5 @@ class Host(object):
         LOG.info('Rebooting {fqdn}'.format(fqdn=self.fqdn))
         self.close_connection()
 
-    def print_host(self):
+    def _print_host(self):
         LOG.info(pprint.pformat(self.__dict__))

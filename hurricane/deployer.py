@@ -21,17 +21,16 @@ class Deployer(object):
         self.password = conf.credentials.default_pass
         self.hosts_and_roles = conf.job_params.hosts_and_roles
         self.installer_name = conf.job_params.openstack_installer
-        self.hosts_and_roles = conf.job_params.hosts_and_roles
+        self.hosts_fqdn = self._init_hosts_fqdn()
         self.os_ver = conf.job_params.openstack_version
         self.constants = conf.constants
         self.check_hosts_connectivity()
-        self.installer = self.init_installer(conf)
-        self.openstack_hosts = self.build_hosts_list(conf)
+        self.installer = self._init_installer_plugin(conf)
+        self.openstack_hosts = self._init_hosts_list(conf)
         self.configurations = Configs(conf)
 
     def check_hosts_connectivity(self):
-        hosts_fqdn = [i.split('/')[0] for i in self.hosts_and_roles.split(", ")]
-        for host_fqdn in list(set(hosts_fqdn)):
+        for host_fqdn in list(set(self.hosts_fqdn)):
             LOG.info('Checking {fqdn} availability via SSH'
                      .format(fqdn=host_fqdn))
             ssh = paramiko.SSHClient()
@@ -51,14 +50,17 @@ class Deployer(object):
                          .format(fqdn=host_fqdn))
                 ssh.close()
 
-    def init_installer(self, conf):
+    def _init_hosts_fqdn(self):
+        return [i.split('/')[0] for i in self.hosts_and_roles.split(", ")]
+
+    def _init_installer_plugin(self, conf):
         """WIP"""
         if self.installer_name == 'packstack':
             return Packstack(conf)
         elif self.installer_name == 'staypuft':
             return Staypuft(conf)
 
-    def build_hosts_list(self, conf):
+    def _init_hosts_list(self, conf):
         openstack_hosts = []
         for host_and_role in self.hosts_and_roles.split(", "):
             host_and_role_split = host_and_role.split('/')
@@ -72,7 +74,9 @@ class Deployer(object):
         for openstack_host in self.openstack_hosts:
             openstack_host.open_connection()
             for repo in repos_list.split(", "):
-                self.configurations.create_yum_repo(openstack_host, repo, build)
+                self.configurations.create_yum_repo(openstack_host,
+                                                    repo,
+                                                    build)
             openstack_host.close_connection()
 
     def config_all_openstack_hosts(self, configs_list):
@@ -81,12 +85,12 @@ class Deployer(object):
             for config in configs_list.split(", "):
                 getattr(self.configurations, config)(openstack_host)
 
-    def determine_controller_host(self):
+    def get_controller_host(self):
         """Assumption, controller is where the DB resides"""
         LOG.info('openstack version: {os_ver},'.format(os_ver=self.os_ver))
-        LOG.info('installer name: {installer_name},'
+        LOG.info('plugins name: {installer_name},'
                  .format(installer_name=self.installer_name))
-        controller_option = '{ver}_{installer}_controller'\
+        controller_option = '{ver}_{plugins}_controller'\
                             .format(ver=self.os_ver.lower(),
                                     installer=self.installer_name)
         LOG.info('controller option: {controller_option}'
@@ -104,11 +108,11 @@ class Deployer(object):
                          .format(fqdn=tmp_host.fqdn))
                 return tmp_host
 
-    def determine_networker_host(self):
+    def get_networker_host(self):
         LOG.info('openstack version: {os_ver},'.format(os_ver=self.os_ver))
-        LOG.info('installer name: {installer_name},'
+        LOG.info('plugins name: {installer_name},'
                  .format(installer_name=self.installer_name))
-        networker_option = '{ver}_{installer}_networker'\
+        networker_option = '{ver}_{plugins}_networker'\
                            .format(ver=self.os_ver.lower(),
                                    installer=self.installer_name)
         LOG.info('networker option: {networker_option}'
@@ -131,12 +135,10 @@ class Deployer(object):
         host.run_bash_command(cmd)
 
     def distribute_public_key_to_openstack_hosts(self, host):
-        hosts_fqdn = [i.split('/')[0] for i in self.hosts_and_roles.split(", ")]
-
         cmd1 = 'echo "StrictHostKeyChecking no" > /root/.ssh/config'
         host.run_bash_command(cmd1)
 
-        for host_fqdn in hosts_fqdn:
+        for host_fqdn in self.hosts_fqdn:
             cmd2 = 'sshpass -p {password} ssh-copy-id -i ~/.ssh/id_rsa.pub ' \
                    'root@{fqdn}'.format(username=self.username,
                                         password=self.password,
