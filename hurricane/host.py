@@ -6,7 +6,7 @@ import paramiko
 import yaml
 
 from config import consts
-from libs import utils
+from hurricane import utils
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)

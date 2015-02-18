@@ -3,9 +3,9 @@ import pprint
 from time import sleep
 
 from config import consts
-from libs.deployer import Deployer
-from libs.infra import Provisioning
-from libs import utils
+from hurricane.deployer import Deployer
+from hurricane.infra import Provisioning
+from hurricane import utils
 
 
 LOG = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ console = logging.StreamHandler()
 LOG.addHandler(console)
 
 
-class Hurricane(object):
+class Manager(object):
 
     def __init__(self, conf):
         self.CONF = conf

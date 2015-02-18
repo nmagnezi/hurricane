@@ -2,10 +2,10 @@ import logging
 
 import paramiko
 
-from libs.configs import Configs
+from hurricane.configs import Configs
 from config import consts
 from installer.foreman.foreman import Foreman
-from libs.host import Host
+from hurricane.host import Host
 from installer.packstack.packstack import Packstack
 
 LOG = logging.getLogger(__name__)
