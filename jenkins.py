@@ -19,7 +19,7 @@ CONFIG_FILE_NAME = (os.environ.
                         'config.ini'))
 CONFIG_FILE_PATH = os.path.join(os.environ.get('WORKSPACE'),
                                 consts.Paths.CONFIG_FILE_DIRECTORY,
-                                consts.Names.CONFIG_FILE_NAME)
+                                CONFIG_FILE_NAME)
 
 config = ConfigParser()
 config.read(CONFIG_FILE_PATH)
