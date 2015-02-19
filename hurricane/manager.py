@@ -53,7 +53,7 @@ class Manager(object):
             LOG.info('Pre installation configs list is empty, Skipping...')
 
     def _install_openstack(self):
-        if utils.do_exec(self.CONF.job_params._install_openstack):
+        if utils.do_exec(self.CONF.job_params.install_openstack):
             if self.CONF.job_params.openstack_installer == 'packstack':
                 controller_host = self.deployer.determine_controller_host()
                 networker_host = self.deployer.determine_networker_host()
@@ -68,7 +68,7 @@ class Manager(object):
                     .configure_answer_file(controller_host,
                                            networker_host,
                                            self.deployer.openstack_hosts)
-                self.deployer.installer._install_openstack(controller_host)
+                self.deployer.installer.install_openstack(controller_host)
                 LOG.info('Rebooting All nodes due to possible kernel update')
                 self.provisioner.reboot_hosts(list(set(self.hosts_fqdn)))
                 # allows host to gracefully reboot
