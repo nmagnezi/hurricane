@@ -86,13 +86,13 @@ class Deployer(object):
                 getattr(self.configurations, config)(openstack_host)
 
     def get_controller_host(self):
-        """Assumption, controller is where the DB resides"""
+        # TODO: this is ugly and should be refactored.
         LOG.info('openstack version: {os_ver},'.format(os_ver=self.os_ver))
-        LOG.info('plugins name: {installer_name},'
+        LOG.info('plugin name: {installer_name},'
                  .format(installer_name=self.installer_name))
-        controller_option = '{ver}_{plugins}_controller'\
+        controller_option = '{ver}_{plugin}_controller'\
                             .format(ver=self.os_ver.lower(),
-                                    installer=self.installer_name)
+                                    plugin=self.installer_name)
         LOG.info('controller option: {controller_option}'
                  .format(controller_option=controller_option))
         controller_option_name = self.constants[controller_option]
@@ -109,12 +109,13 @@ class Deployer(object):
                 return tmp_host
 
     def get_networker_host(self):
+        # TODO: this is ugly and should be refactored.
         LOG.info('openstack version: {os_ver},'.format(os_ver=self.os_ver))
-        LOG.info('plugins name: {installer_name},'
+        LOG.info('plugin name: {installer_name},'
                  .format(installer_name=self.installer_name))
-        networker_option = '{ver}_{plugins}_networker'\
+        networker_option = '{ver}_{plugin}_networker'\
                            .format(ver=self.os_ver.lower(),
-                                   installer=self.installer_name)
+                                   plugin=self.installer_name)
         LOG.info('networker option: {networker_option}'
                  .format(networker_option=networker_option))
         networker_option_name = self.constants[networker_option]
