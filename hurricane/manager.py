@@ -55,8 +55,8 @@ class Manager(object):
     def _install_openstack(self):
         if utils.do_exec(self.CONF.job_params.install_openstack):
             if self.CONF.job_params.openstack_installer == 'packstack':
-                controller_host = self.deployer.determine_controller_host()
-                networker_host = self.deployer.determine_networker_host()
+                controller_host = self.deployer.get_controller_host()
+                networker_host = self.deployer.get_networker_host()
                 controller_host.open_connection()
                 self.deployer.generate_ssh_key(controller_host)
                 self.deployer.distribute_public_key_to_openstack_hosts(
@@ -92,7 +92,7 @@ class Manager(object):
         if utils.do_exec(self.CONF.job_params.run_tests):
             tests_repository = self.CONF.job_params.tests_repository
             tests = self.CONF.job_params.tests
-            #if utils.do_exec(main.CONF.job_params.rebuild_test_client):
+            # if utils.do_exec(main.CONF.job_params.rebuild_test_client):
 
     def run(self):
         LOG.info(pprint.pformat(self.CONF))
