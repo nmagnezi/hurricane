@@ -1,4 +1,4 @@
-from ConfigParser import ConfigParser
+import ConfigParser
 import logging
 import os
 
@@ -13,7 +13,7 @@ LOG.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
 LOG.addHandler(console)
 
-#Constants
+# Constants
 CONFIG_FILE_NAME = (os.environ.
                     get(consts.Names.ENV_VARIABLE_PREFIX + 'JOB_CONF_FILE',
                         'config.ini'))
@@ -21,7 +21,7 @@ CONFIG_FILE_PATH = os.path.join(os.environ.get('WORKSPACE'),
                                 consts.Paths.CONFIG_FILE_DIRECTORY,
                                 CONFIG_FILE_NAME)
 
-config = ConfigParser()
+config = ConfigParser.ConfigParser()
 config.read(CONFIG_FILE_PATH)
 
 LOG.info('Configuring {configfile} configuration file with the job parameters'
