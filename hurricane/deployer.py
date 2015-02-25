@@ -1,12 +1,11 @@
 import logging
 
-import paramiko
-
-from hurricane.configs import Configs
 from config import consts
+from hurricane.configs import Configs
 from hurricane.host import Host
 from plugins.installer.packstack.packstack import Packstack
 from plugins.installer.staypuft.staypuft import Staypuft
+import paramiko
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -54,7 +53,7 @@ class Deployer(object):
         return [i.split('/')[0] for i in self.hosts_and_roles.split(", ")]
 
     def _init_installer_plugin(self, conf):
-        """WIP"""
+        # TODO: this is ugly and should be refactored.
         if self.installer_name == 'packstack':
             return Packstack(conf)
         elif self.installer_name == 'staypuft':
@@ -90,16 +89,16 @@ class Deployer(object):
         LOG.info('openstack version: {os_ver},'.format(os_ver=self.os_ver))
         LOG.info('plugin name: {installer_name},'
                  .format(installer_name=self.installer_name))
-        controller_option = '{ver}_{plugin}_controller'\
-                            .format(ver=self.os_ver.lower(),
-                                    plugin=self.installer_name)
+        controller_option = ('{ver}_{plugin}_controller'
+                             .format(ver=self.os_ver.lower(),
+                                     plugin=self.installer_name))
         LOG.info('controller option: {controller_option}'
                  .format(controller_option=controller_option))
         controller_option_name = self.constants[controller_option]
         LOG.info('controller option name: {controller_option_name}'
                  .format(controller_option_name=controller_option_name))
-        controller_role_name = \
-            self.installer.get_tagged_value(controller_option_name)
+        controller_role_name = (self.installer
+                                .get_tagged_value(controller_option_name))
         LOG.info('controller role name: {controller_role_name},'
                  .format(controller_role_name=controller_role_name))
         for tmp_host in self.openstack_hosts:
@@ -113,16 +112,16 @@ class Deployer(object):
         LOG.info('openstack version: {os_ver},'.format(os_ver=self.os_ver))
         LOG.info('plugin name: {installer_name},'
                  .format(installer_name=self.installer_name))
-        networker_option = '{ver}_{plugin}_networker'\
-                           .format(ver=self.os_ver.lower(),
-                                   plugin=self.installer_name)
+        networker_option = ('{ver}_{plugin}_networker'
+                            .format(ver=self.os_ver.lower(),
+                                    plugin=self.installer_name))
         LOG.info('networker option: {networker_option}'
                  .format(networker_option=networker_option))
         networker_option_name = self.constants[networker_option]
         LOG.info('networker option name: {networker_option_name}'
                  .format(networker_option_name=networker_option_name))
-        networker_role_name = \
-            self.installer.get_tagged_value(networker_option_name)
+        networker_role_name = (self.installer
+                               .get_tagged_value(networker_option_name))
         LOG.info('networker role name: {networker_role_name},'
                  .format(networker_role_name=networker_role_name))
         for tmp_host in self.openstack_hosts:
@@ -132,16 +131,16 @@ class Deployer(object):
                 return tmp_host
 
     def generate_ssh_key(self, host):
-        cmd = 'yes | ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa'
-        host.run_bash_command(cmd)
+        host.run_bash_command('yes | ssh-keygen -t rsa -N "" -f '
+                              '/root/.ssh/id_rsa')
 
     def distribute_public_key_to_openstack_hosts(self, host):
-        cmd1 = 'echo "StrictHostKeyChecking no" > /root/.ssh/config'
-        host.run_bash_command(cmd1)
+        host.run_bash_command('echo "StrictHostKeyChecking no" > '
+                              '/root/.ssh/config')
 
         for host_fqdn in self.hosts_fqdn:
-            cmd2 = 'sshpass -p {password} ssh-copy-id -i ~/.ssh/id_rsa.pub ' \
-                   'root@{fqdn}'.format(username=self.username,
-                                        password=self.password,
-                                        fqdn=host_fqdn)
-            host.run_bash_command(cmd2)
+            host.run_bash_command(('sshpass -p {password} ssh-copy-id -i '
+                                   '~/.ssh/id_rsa.pub root@{fqdn}'
+                                   .format(username=self.username,
+                                           password=self.password,
+                                           fqdn=host_fqdn)))
