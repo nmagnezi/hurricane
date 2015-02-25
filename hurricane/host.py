@@ -1,4 +1,3 @@
-import datetime
 import pprint
 import logging
 
@@ -36,7 +35,7 @@ class Host(object):
         self.open_connection()
         self._install_prerequisites()
         host_facts = self._init_facter()
-        #self.close_connection()
+        # self.close_connection()
         return host_facts
 
     def _init_facter(self):

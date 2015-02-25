@@ -22,20 +22,18 @@ class Packstack(object):
     def _get_file_path(self):
         path = os.path.join(consts.Paths.INSTALLER_CONFIG_FILE_DIRCTORY,
                             self.packstack_answer_file_name)
-        file_path = '{path}{suffix}'.format(path=path,
-                                            suffix=consts.Names.ANS_FILE_SUFFIX)
+        file_path = ('{path}{suffix}'
+                     .format(path=path, suffix=consts.Names.ANS_FILE_SUFFIX))
         return file_path
 
     def generate_answer_file(self, host):
-        cmd = 'packstack --gen-answer-file={answer_file_name}'\
-              .format(answer_file_name=self.packstack_answer_file_name)
-
-        host.run_bash_command(cmd)
-
-        LOG.info('Generating packstack answer file {answer_file_name} '
-                 'on host {host}'
+        LOG.info('Generating packstack answer file {answer_file_name} on host '
+                 '{host}'
                  .format(answer_file_name=self.packstack_answer_file_name,
                          host=host.fqdn))
+        host.run_bash_command(
+            'packstack --gen-answer-file={answer_file_name}'
+            .format(answer_file_name=self.packstack_answer_file_name))
 
     def get_tagged_value(self, attribute):
         a = attribute.lower()
@@ -43,12 +41,11 @@ class Packstack(object):
         return tagged_value[1:-1]
 
     def _set_tagged_value(self, host, tag_name, tag_value):
-        cmd = 'sed -i s/"<{tag_name}>"/"{tag_value}"/g ' \
-              '/root/{answer_file_name}'\
-              .format(tag_name=tag_name,
-                      tag_value=tag_value,
-                      answer_file_name=self.packstack_answer_file_name)
-        host.run_bash_command(cmd)
+        host.run_bash_command(
+            'sed -i s/"<{tag_name}>"/"{tag_value}"/g /root/{answer_file_name}'
+            .format(tag_name=tag_name,
+                    tag_value=tag_value,
+                    answer_file_name=self.packstack_answer_file_name))
 
     def configure_answer_file(self, controller, networker, openstack_hosts):
         LOG.info('Configuring packstack answer file {answer_file_name} '
@@ -56,27 +53,25 @@ class Packstack(object):
                  .format(answer_file_name=self.packstack_answer_file_name,
                          host=controller.fqdn))
 
-        # inject template values to answer file
+        # Inject template values to answer file
         for option in self.answer_file.general.keys():
-            cmd = 'sed -i s/^{option}=.*/{option}="{value}"/g ' \
-                  '{packstack_answer_file_name}'\
-                  .format(option=option.upper(),
-                          value=self.answer_file.general[option],
-                          packstack_answer_file_name=
-                          os.path.join(
-                              consts.Paths.INSTALLER_CONFIG_FILE_DEFAULT_PATH,
-                              self.packstack_answer_file_name))
+            controller.run_bash_command(
+                'sed -i s/^{option}=.*/{option}="{value}"/g '
+                '{packstack_answer_file_name}'
+                .format(option=option.upper(),
+                        value=self.answer_file.general[option],
+                        packstack_answer_file_name=os.path.
+                        join(consts.Paths.INSTALLER_CONFIG_FILE_DEFAULT_PATH,
+                             self.packstack_answer_file_name)))
 
-            controller.run_bash_command(cmd)
-
-        # build hosts ip addresses dict by role
+        # Build hosts ip addresses dict by role
         tags_to_inject = {}
         for host in openstack_hosts:
-            if not host.role in tags_to_inject:
+            if host.role not in tags_to_inject:
                 tags_to_inject[host.role] = []
             tags_to_inject[host.role].append(host.ip_address)
 
-        # add tagged values to dict
+        # Add tagged values to dict
         if self.installer_conf_tags:
             for tag in self.installer_conf_tags.split(", "):
                 split_tag = tag.split('/')
@@ -102,15 +97,14 @@ class Packstack(object):
         # inject tagged values to answer file
         for tag in tags_to_inject.keys():
             self._set_tagged_value(controller, tag,
-                                  ", ".join(tags_to_inject[tag]))
+                                   ", ".join(tags_to_inject[tag]))
 
     def install_openstack(self, host):
-        cmd1 = 'grep "CONFIG_" {answer_file_name}  | grep -v "#"'\
-               .format(answer_file_name=self.packstack_answer_file_name)
-        cmd2 = 'packstack --answer-file=/root/{answer_file_name} -d'\
-               .format(answer_file_name=self.packstack_answer_file_name)
-        host.run_bash_command(cmd1)
-        LOG.info('running packstack on {host}. '
-                 'Grab yourself a cup of coffee it will take ~20 minutes'
-                 .format(host=host.fqdn))
-        host.run_bash_command(cmd2)
+        host.run_bash_command(
+            'grep "CONFIG_" {answer_file_name} | grep -v "#"'
+            .format(answer_file_name=self.packstack_answer_file_name))
+        LOG.info('running packstack on {host}. Grab yourself a cup of coffee '
+                 'it will take ~20 minutes'.format(host=host.fqdn))
+        host.run_bash_command(
+            'time packstack --answer-file=/root/{answer_file_name} -d'
+            .format(answer_file_name=self.packstack_answer_file_name))

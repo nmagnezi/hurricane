@@ -33,7 +33,7 @@ def file2bunch(conf):
 
 def do_exec(value):
     skip_values = ['', 'false', 'None', None]
-    return True if not value in skip_values else False
+    return True if value not in skip_values else False
 
 
 def timestamp():

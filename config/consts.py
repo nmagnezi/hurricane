@@ -8,9 +8,9 @@ class _Paths(object):
     INSTALLER_CONFIG_FILE_DEFAULT_PATH = '/root'
     INSTALLER_CONFIG_FILE_DIRCTORY = ('hurricane/plugins/installer/'
                                       'packstack/templates')
-    #INSTALLER_CONFIG_FILE_DIRCTORY = 'installer/packstack/templates'
+    # INSTALLER_CONFIG_FILE_DIRCTORY = 'plugins/installer/packstack/templates'
     CONFIG_FILE_DIRECTORY = 'hurricane_config/config'
-    #CONFIG_FILE_DIRECTORY = 'config'
+    # CONFIG_FILE_DIRECTORY = 'config'
     ANS_FILE_SUFFIX = '.ini'
 
 
