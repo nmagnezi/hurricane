@@ -38,5 +38,5 @@ for env_variable in os.environ:
         config.set(consts.Names.CONFIG_FILE_SECTION, option, value)
         LOG.info('{option} = {value}'.format(option=option, value=value))
 
-with open(CONFIG_FILE_PATH, 'wb') as configfile:
+with open(CONFIG_FILE_PATH, 'w') as configfile:
     config.write(configfile)
