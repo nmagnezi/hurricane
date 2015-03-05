@@ -1,4 +1,4 @@
-from ConfigParser import ConfigParser
+import ConfigParser
 import datetime
 import logging
 import os
@@ -20,7 +20,7 @@ def get_file_path(config_file):
 
 
 def file2bunch(conf):
-    config_file = ConfigParser()
+    config_file = ConfigParser.ConfigParser()
     config_file.read(conf)
     conf_dict = {}
     for section in config_file.sections():
@@ -33,7 +33,7 @@ def file2bunch(conf):
 
 def do_exec(value):
     skip_values = ['', 'false', 'None', None]
-    return True if value not in skip_values else False
+    return value not in skip_values
 
 
 def timestamp():
